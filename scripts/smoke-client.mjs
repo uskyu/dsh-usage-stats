@@ -120,17 +120,16 @@ for (const forbidden of [
 	"tariffWindowText",
 	"usg_providerSelect",
 	"usg_accountCard",
-	"usg_sessionCost"
+	"usg_sessionCost",
+	"buildTodayModelRows",
+	"buildMonthCurve",
+	"MonthCurve",
+	"usg_modelRank",
+	"usg_curveSvg",
+	"usg_dayBar"
 ]) {
 	if (source.includes(forbidden)) throw new Error(`removed account UI/dead code must be absent from the client bundle: ${forbidden}`);
 }
-const dayTokensRule = /\.usg_dayTokens\{([^}]*)\}/.exec(source)?.[1] ?? "";
-if (!dayTokensRule.includes("min-width:84px")) throw new Error("Last 14 days token column must retain an 84px minimum width (#75)");
-if (!dayTokensRule.includes("text-align:right")) throw new Error("Last 14 days token column must be right aligned (#75)");
-if (!dayTokensRule.includes("flex:none") || !dayTokensRule.includes("font-variant-numeric:tabular-nums")) throw new Error("Last 14 days token alignment must preserve the existing flex and numeric typography");
-if (/(?:^|;)width:84px(?:;|$)/.test(dayTokensRule)) throw new Error("Last 14 days token column must use min-width rather than a fixed width in narrow layouts");
-const dayDateRule = /\.usg_dayDate\{([^}]*)\}/.exec(source)?.[1] ?? "";
-if (!dayDateRule.includes("flex:0 1 104px") || !dayDateRule.includes("min-width:0") || !dayDateRule.includes("overflow:hidden")) throw new Error("the date column must shrink before the aligned token column can overflow a narrow panel");
 // The sidebar action sits directly above the shell's Settings key and keeps that
 // key's geometry: a 42px row with 10/8px side padding and the same `4px -2px`
 // row margin, so the two buttons line up on both axes (#108). The collapsed
@@ -159,34 +158,30 @@ if (!panelRule.includes("backdrop-filter:var(--dsw-menu-backdrop-filter)")) thro
 if (!panelRule.includes("box-shadow:var(--dsw-elevation-prominent,var(--dsw-shadow-lv2))")) throw new Error("the panel must take the official prominent elevation with the legacy shadow as fallback");
 if (panelRule.includes("border:1px solid")) throw new Error("the official menu surface draws its hairline through the elevation stroke, not a 1px border");
 if (headerRule.includes("background:")) throw new Error("the panel header must stay transparent so the glass surface is continuous");
-// The two month views: the calendar cell grid and the curve. The curve must be
-// a real gradient area + stroke (not a bar chart), and the toggle must sit above
-// the grid, which is what the user asked for.
+// The two month views. The toggle shares the month row (so it costs no height),
+// the trend is a real multi-series line chart, and the share is a donut.
 const viewToggleRule = /\.usg_viewToggle\{([^}]*)\}/.exec(source)?.[1] ?? "";
 const viewToggleButtonRule = /\.usg_viewToggleButton\{([^}]*)\}/.exec(source)?.[1] ?? "";
 const viewToggleActiveRule = /\.usg_viewToggleButton\[data-active\]\{([^}]*)\}/.exec(source)?.[1] ?? "";
-if (!viewToggleRule.includes("display:inline-flex")) throw new Error("the heat/curve switch must be a compact segmented control");
+if (!viewToggleRule.includes("display:inline-flex")) throw new Error("the view switch must be a compact segmented control");
+if (!viewToggleRule.includes("flex:none")) throw new Error("the view switch must not stretch the month row");
 if (!viewToggleButtonRule.includes("cursor:pointer")) throw new Error("the view toggle buttons must look clickable");
 if (viewToggleActiveRule === "") throw new Error("the active view must be visually distinguishable");
-const curveSvgRule = /\.usg_curveSvg\{([^}]*)\}/.exec(source)?.[1] ?? "";
-if (!curveSvgRule.includes("width:100%")) throw new Error("the curve must scale to the panel width");
-const modelRankTokensRule = /\.usg_modelRankTokens\{([^}]*)\}/.exec(source)?.[1] ?? "";
-if (!modelRankTokensRule.includes("min-width:64px") || !modelRankTokensRule.includes("text-align:right")) throw new Error("the today-by-model token column must stay right aligned and wide enough for an abbreviated value");
-if (!modelRankTokensRule.includes("tabular-nums")) throw new Error("the today-by-model token column must use tabular numerals");
-// A share bar must be a flexible TRACK plus a fixed-width FILL. A `width` on a
-// `flex:1` item is silently ignored (flex-basis 0 wins), which renders every bar
-// the same length: the regression this pair of rules prevents.
-for (const [track, fill] of [["usg_dayBarTrack", "usg_dayBar"], ["usg_modelRankTrack", "usg_modelRankBar"]]) {
-	const trackRule = new RegExp(`\\.${track}\\{([^}]*)\\}`).exec(source)?.[1] ?? "";
-	const fillRule = new RegExp(`\\.${fill}\\{([^}]*)\\}`).exec(source)?.[1] ?? "";
-	if (!trackRule.includes("flex:1")) throw new Error(`${track} must be the flexible element`);
-	if (/(?:^|;)width:/.test(trackRule)) throw new Error(`${track} must not carry the share width`);
-	if (fillRule.includes("flex:1")) throw new Error(`${fill} must not be flexible, or its width is ignored`);
-	if (!fillRule.includes("height:6px")) throw new Error(`${fill} must keep the bar geometry`);
-}
-const curvePeakRule = /\.usg_curvePeak\{([^}]*)\}/.exec(source)?.[1] ?? "";
-if (curvePeakRule === "") throw new Error("the curve needs its peak caption");
-for (const selector of [".usg_iconButton:focus-visible", ".usg_navButton:focus-visible", ".usg_cell:focus-visible", ".usg_day:focus-visible", ".usg_viewToggleButton:focus-visible"]) {
+const trendSvgRule = /\.usg_trendSvg\{([^}]*)\}/.exec(source)?.[1] ?? "";
+if (!trendSvgRule.includes("width:100%")) throw new Error("the trend plot must scale to the panel width");
+// The hit layer overlays the static SVG, so it must not consume layout height.
+const trendHitsRule = /\.usg_trendHits\{([^}]*)\}/.exec(source)?.[1] ?? "";
+const trendHitRule = /\.usg_trendHit\{([^}]*)\}/.exec(source)?.[1] ?? "";
+if (!trendHitsRule.includes("height:0")) throw new Error("the trend hit layer must be an overlay, not a second row");
+if (!trendHitRule.includes("margin-top:-78px")) throw new Error("the trend hit targets must be pulled back over the plot");
+const donutItemNameRule = /\.usg_donutItemName\{([^}]*)\}/.exec(source)?.[1] ?? "";
+if (!donutItemNameRule.includes("text-overflow:ellipsis") || !donutItemNameRule.includes("flex:1")) throw new Error("the donut legend must truncate long model names instead of pushing the numbers out");
+const donutMetaRule = /\.usg_donutItemMeta\{([^}]*)\}/.exec(source)?.[1] ?? "";
+if (!donutMetaRule.includes("tabular-nums") || !donutMetaRule.includes("text-align:right")) throw new Error("the donut percentage column must stay aligned");
+// The hover card must float over the plot without capturing the pointer.
+const tooltipRule = /\.usg_trendTooltip\{([^}]*)\}/.exec(source)?.[1] ?? "";
+if (!tooltipRule.includes("position:absolute") || !tooltipRule.includes("pointer-events:none")) throw new Error("the trend hover card must float over the plot and ignore the pointer");
+for (const selector of [".usg_iconButton:focus-visible", ".usg_navButton:focus-visible", ".usg_cell:focus-visible", ".usg_trendHit:focus-visible", ".usg_viewToggleButton:focus-visible"]) {
 	if (!source.includes(selector)) throw new Error(`panel control ${selector} must join the focus outline rule`);
 }
 new Function(source)(); // executes the window.__ModuleLoader__.load call
@@ -245,23 +240,23 @@ console.log("shared footer action row/wrap policy ok");
 
 const { VIEW_STORAGE_KEY, readStoredView, writeStoredView } = exports_;
 assert.equal(VIEW_STORAGE_KEY, "@uskyu/dsh-usage-stats:view:v1");
-// The calendar is the default; a persisted curve survives a reload.
-assert.equal(readStoredView(localStorage), "heat", "an empty storage must fall back to the calendar view");
-writeStoredView("curve", localStorage);
-assert.equal(readStoredView(localStorage), "curve", "the curve selection must persist");
+// The trend is the default; a persisted calendar survives a reload.
+assert.equal(readStoredView(localStorage), "curve", "an empty storage must fall back to the curve view");
 writeStoredView("heat", localStorage);
-assert.equal(readStoredView(localStorage), "heat");
+assert.equal(readStoredView(localStorage), "heat", "the calendar selection must persist");
+writeStoredView("curve", localStorage);
+assert.equal(readStoredView(localStorage), "curve");
 // Anything else in the key is junk from an older format and must not be trusted.
 storedValues.set(VIEW_STORAGE_KEY, "pie-chart");
-assert.equal(readStoredView(localStorage), "heat", "an unknown stored view must fall back to the calendar");
+assert.equal(readStoredView(localStorage), "curve", "an unknown stored view must fall back to the curve");
 assert.equal(storedValues.has(VIEW_STORAGE_KEY), false, "an unknown stored view must be cleared");
 // An invalid write must clear rather than store a value the reader rejects.
 writeStoredView("nonsense", localStorage);
 assert.equal(storedValues.has(VIEW_STORAGE_KEY), false);
 // Storage can be disabled or throw (Safari private mode, quota): never throw.
 const deniedStorage = { getItem: () => { throw new Error("denied"); }, setItem: () => { throw new Error("denied"); }, removeItem: () => { throw new Error("denied"); } };
-assert.equal(readStoredView(deniedStorage), "heat");
-writeStoredView("curve", deniedStorage);
+assert.equal(readStoredView(deniedStorage), "curve");
+writeStoredView("heat", deniedStorage);
 console.log("month view persistence policy ok");
 
 const { shouldDismissPanel } = exports_;
@@ -408,32 +403,97 @@ if (!dayDetail.includes("ark · deepseek-v4-flash")) throw new Error("same model
 if (dayDetail.length < 500) throw new Error("day detail markup too small");
 console.log("day detail render ok (provider-prefixed models), markup length:", dayDetail.length);
 
-// Today's per-model ranking replaces the old session-cost list.
-const { buildTodayModelRows } = exports_;
-const todayRows = buildTodayModelRows({
-	tokens: 33818571,
-	models: [
-		{ model: "deepseek-official/deepseek-v4-flash", tokens: 30000000 },
-		{ model: "ark/deepseek-v4-flash", tokens: 3000000 },
-		{ model: "warmup/empty", tokens: 0 },
-		{ model: "", tokens: 500 },
-		{ model: "relay-a/glm-4.6", tokens: 818571 }
-	]
-});
-assert.deepEqual(todayRows.rows.map((row) => row.model), ["deepseek-official/deepseek-v4-flash", "ark/deepseek-v4-flash", "relay-a/glm-4.6"], "only non-empty models render, largest first");
-assert.equal(todayRows.total, 33818571, "the day total is the share denominator");
-assert.equal(todayRows.top, 30000000);
-for (const row of todayRows.rows) {
-	if (row.share < 2 || row.share > 100) throw new Error(`share must stay a usable bar width, got ${row.share}`);
+// The daily trend: one series per model over the whole month, a stable ranking,
+// an aggregate bucket for the tail, and geometry that stays inside the box.
+const { buildMonthTrend, buildModelShare, donutSegments, smoothPath } = exports_;
+const trendDays = new Map();
+const trendModels = [
+	["deepseek-official/deepseek-v4-flash", [10, 40, 0, 25]],
+	["ark/deepseek-v4-flash", [5, 8, 30, 0]],
+	["opencode-go/deepseek-v4.1-flash", [1, 2, 3, 4]],
+	["relay-a/glm-4.6", [0, 0, 2, 1]],
+	["relay-b/qwen3", [0, 1, 0, 0]]
+];
+trendDays.set("2026-08-01", { date: "2026-08-01", tokens: 16, models: trendModels.map(([model, values]) => ({ model, tokens: values[0] })) });
+trendDays.set("2026-08-02", { date: "2026-08-02", tokens: 51, models: trendModels.map(([model, values]) => ({ model, tokens: values[1] })) });
+trendDays.set("2026-08-03", { date: "2026-08-03", tokens: 35, models: trendModels.map(([model, values]) => ({ model, tokens: values[2] })) });
+trendDays.set("2026-08-04", { date: "2026-08-04", tokens: 30, models: trendModels.map(([model, values]) => ({ model, tokens: values[3] })) });
+const trend = buildMonthTrend(trendDays, 2026, 7, { labelOf: (key) => `L:${key}` });
+assert.equal(trend.days.length, 31, "every day of the month is a sample so the x axis stays a real time axis");
+assert.equal(trend.series.length, 5, "four named series plus the aggregate bucket");
+assert.deepEqual(trend.series.slice(0, 4).map((s) => s.key), [
+	"deepseek-official/deepseek-v4-flash",
+	"ark/deepseek-v4-flash",
+	"opencode-go/deepseek-v4.1-flash",
+	"relay-a/glm-4.6"
+], "series must be ranked by the month total, so colours stay stable across renders");
+assert.equal(trend.series[4].aggregate, true, "the fifth model folds into the aggregate bucket");
+assert.equal(trend.series[4].count, 1);
+assert.equal(trend.series[0].label, "L:deepseek-official/deepseek-v4-flash", "series labels come from the injected labeller");
+assert.equal(trend.days[0].total, 16, "each sample carries the day total");
+assert.deepEqual(trend.days[1].values.map((v) => v.value), [40, 8, 2, 0, 1], "each sample breaks down per series, including the aggregate");
+assert.equal(trend.max, 40, "the scale is the largest single series value, not the daily total");
+for (const day of trend.days) {
+	if (day.x < 0 || day.x > trend.width) throw new Error(`sample x escaped the plot: ${day.x}`);
+	for (const point of day.points) {
+		if (point.y < 0 || point.y > trend.height) throw new Error(`sample y escaped the plot: ${point.y}`);
+	}
 }
-if (buildTodayModelRows({ tokens: 100, models: [] }).rows.length !== 0) throw new Error("an empty model list must produce no rows");
-if (buildTodayModelRows(null).rows.length !== 0) throw new Error("a missing day must produce no rows");
-const noTotal = buildTodayModelRows({ models: [{ model: "a/b", tokens: 10 }, { model: "c/d", tokens: 30 }] });
-assert.equal(noTotal.total, 40, "a missing day total must fall back to the sum of the visible rows");
-assert.equal(noTotal.rows[0].share, 75, "the top model keeps a proportional share when the total is derived");
-const limited = buildTodayModelRows({ tokens: 100, models: [{ model: "a/b", tokens: 60 }, { model: "c/d", tokens: 30 }, { model: "e/f", tokens: 10 }] }, 2);
-assert.equal(limited.rows.length, 2, "the ranking limit must be respected");
-console.log("today-by-model ranking ok (ordering, zero/empty filtering, shares)");
+assert.equal(trend.days[0].points[3].y, trend.baseline, "a zero-value series sits exactly on the baseline");
+assert.equal(trend.days[1].points[0].y, trend.height - 14 - (trend.plotHeight), "the peak reaches the top of the plot box");
+for (const model of trend.series) {
+	if (typeof model.path !== "string" || !model.path.startsWith("M ")) throw new Error(`series ${model.key} needs a path`);
+	if (!model.path.includes(" C ")) throw new Error("series must be smoothed, not a polyline");
+}
+assert.equal(trend.gridLines.length, 4, "four dashed gridlines above the baseline");
+for (const line of trend.gridLines) {
+	if (line.y < 0 || line.y > trend.baseline) throw new Error("gridlines must stay inside the plot box");
+}
+if (trend.ticks.length > 7 || trend.ticks[0].day !== 1) throw new Error(`date ticks must start at day 1 and stay sparse, got ${trend.ticks.length}`);
+const emptyTrend = buildMonthTrend(new Map(), 2026, 7);
+assert.equal(emptyTrend.series.length, 0, "a month with no usage has no series");
+assert.equal(emptyTrend.days.length, 31, "but it still spans the whole month");
+assert.equal(emptyTrend.max, 0);
+if (smoothPath([]) !== "" || smoothPath([{ x: 1, y: 2 }]) !== "M 1 2") throw new Error("the spline helper must be defensive about short inputs");
+console.log("daily trend series ok:", trend.series.length, "series,", trend.days.length, "days,", trend.ticks.length, "ticks");
+
+// The month model share behind the donut.
+const share = buildModelShare(trendDays, 2026, 7);
+assert.equal(share.total, 132, "the share denominator is the sum of every model-day bucket");
+assert.deepEqual(share.items.map((item) => item.key), [
+	"deepseek-official/deepseek-v4-flash",
+	"ark/deepseek-v4-flash",
+	"opencode-go/deepseek-v4.1-flash",
+	"relay-a/glm-4.6",
+	"relay-b/qwen3"
+], "a five-model month needs no aggregate bucket");
+assert.equal(share.items[0].tokens, 75);
+assert.equal(share.items[0].percent, 57);
+assert.equal(share.items.reduce((sum, item) => sum + item.tokens, 0), share.total, "the slices must add up to the total");
+const cappedShare = buildModelShare(trendDays, 2026, 7, { limit: 3 });
+assert.equal(cappedShare.items.length, 4, "the capped ranking keeps its aggregate bucket");
+assert.equal(cappedShare.items[3].aggregate, true);
+assert.equal(cappedShare.items[3].count, 2);
+assert.equal(cappedShare.items.reduce((sum, item) => sum + item.tokens, 0), cappedShare.total, "aggregating must not lose tokens");
+assert.equal(buildModelShare(new Map(), 2026, 7).items.length, 0, "an empty month produces no slices");
+assert.equal(buildModelShare(new Map(), 2026, 7).total, 0);
+// Donut geometry: dash segments must tile the circumference exactly once. The
+// legend percentages are independently rounded, so the arcs must NOT use them.
+const segments = donutSegments(share.items, 52, share.total);
+const circumference = Number((2 * Math.PI * 52).toFixed(2));
+assert.equal(segments[0].offset, 0, "the first slice starts at the top of the ring");
+assert.equal(segments[0].circumference, circumference);
+let consumed = 0;
+for (const [index, segment] of segments.entries()) {
+	if (Math.abs(segment.offset - -consumed) > 0.01) throw new Error(`slice ${index} must start where slice ${index - 1} ended`);
+	consumed += segment.length;
+}
+if (Math.abs(consumed - circumference) > 0.01) throw new Error(`donut slices must tile the ring, consumed ${consumed} of ${circumference}`);
+assert.equal(segments[0].length, Number((share.items[0].tokens / share.total * circumference).toFixed(2)), "arc length must come from the exact token fraction");
+const roundedSum = share.items.reduce((sum, item) => sum + item.percent, 0);
+if (roundedSum === 100) throw new Error("this fixture is only meaningful while the rounded percentages overshoot 100");
+if (Math.abs(consumed - circumference) > 0.01) throw new Error("a legend whose percentages overshoot must still close the ring");
+console.log("model share donut ok:", share.items.length, "slices, total", share.total, "| rounded % sum", roundedSum);
 
 // Number abbreviation: the whole point of the change is that a token column
 // never shows a wall of digits.
@@ -559,43 +619,104 @@ const statValues = renderer.root.findAll((node) => node.props?.className === "us
 assert.deepEqual(statValues.map((node) => node.props.children), ["33.8M", "33.8M", "6.2B"], "the three stat cards must abbreviate");
 assert.deepEqual(statValues.map((node) => node.props.title), ["33,818,571", "33,818,571", "6,246,205,945"], "each stat card must keep the exact value in its tooltip");
 
-// Today's per-model ranking replaced the session-cost list.
-const rankRows = renderer.root.findAll((node) => typeof node.props?.["data-model-rank"] === "string");
-assert.deepEqual(rankRows.map((node) => node.props["data-model-rank"]), ["deepseek-official/deepseek-v4-flash", "ark/deepseek-v4-flash"], "the ranking lists today's models, largest first");
-const rankMarkup = renderToStaticMarkup(react.createElement(UsageStatsPanel, { wide: true, t: panelTranslate }));
-if (rankMarkup.includes("sessionCost")) throw new Error("the session-cost section must be gone");
-const rankTokens = rankRows.map((row) => row.findAll((node) => node.props?.className === "usg_modelRankTokens")[0].props.children);
-assert.deepEqual(rankTokens, ["30M", "3.8M"], "each ranking row shows an abbreviated token count");
-// The share must land on the inner fill, never on the flexible track.
-const rankShares = rankRows.map((row) => row.findAll((node) => node.props?.className === "usg_modelRankBar")[0].props.style.width);
-assert.deepEqual(rankShares, ["89%", "11%"], "each ranking row widths its own fill by share of today");
-assert.equal(rankRows[0].findAll((node) => node.props?.className === "usg_modelRankTrack")[0].props["aria-hidden"], true, "the share bar is decorative and must stay out of the accessibility tree");
-assert.equal(rankRows[0].findAll((node) => node.props?.className === "usg_modelRankTokens")[0].props.title, "30,000,000 tokens", "the ranking row keeps the exact count in its tooltip");
-
-// The view toggle sits with the month header and switches the calendar for the
-// smooth curve; the choice persists across a close/reopen.
+// The view toggle shares the month row and comes BEFORE the month arrows, so it
+// adds no vertical space. The trend is the default view.
 const viewButtons = renderer.root.findAll((node) => typeof node.props?.["data-view"] === "string");
-assert.deepEqual(viewButtons.map((node) => node.props["data-view"]), ["heat", "curve"], "the month header must offer exactly the calendar and the curve");
-assert.equal(viewButtons[0].props["aria-pressed"], true, "the calendar is the default view");
-assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_heatRow").length > 0, true, "the calendar grid must render by default");
-assert.equal(renderer.root.findAllByType("svg").some((node) => node.props?.className === "usg_curveSvg"), false, "the curve must stay hidden while the calendar is selected");
+assert.deepEqual(viewButtons.map((node) => node.props["data-view"]), ["curve", "heat"], "the month row must offer the curve first, then the calendar");
+assert.equal(viewButtons[0].props["aria-pressed"], true, "the trend is the default view");
+const monthHeader = renderer.root.findByProps({ className: "usg_heatHeader" });
+const headerOrder = monthHeader.findAll((node) => node.props?.["data-view"] !== void 0 || node.props?.className === "usg_monthNav");
+const monthNavNode = headerOrder.find((node) => node.props?.className === "usg_monthNav");
+const toggleIndex = monthNavNode.props.children.findIndex((child) => child?.props?.className === "usg_viewToggle");
+assert.equal(toggleIndex, 0, "the view toggle must be the first thing inside the month nav, i.e. left of the arrows");
+assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_heatRow").length, 0, "the calendar stays hidden while the trend is selected");
+
+// The trend: one smoothed path per series, a legend, gridlines and a date axis.
+const trendSvg = renderer.root.findAllByType("svg").find((node) => node.props?.className === "usg_trendSvg");
+if (trendSvg === undefined) throw new Error("the default view must render the trend plot");
+const seriesPaths = trendSvg.findAll((node) => typeof node.props?.["data-trend-series"] === "string");
+assert.deepEqual(seriesPaths.map((node) => node.props["data-trend-series"]), ["deepseek-official/deepseek-v4-flash", "ark/deepseek-v4-flash"], "one path per model series");
+for (const path of seriesPaths) {
+	if (typeof path.props.d !== "string" || !path.props.d.includes(" C ")) throw new Error("each trend series must be a smoothed spline, not a polyline");
+	if (typeof path.props.stroke !== "string" || !path.props.stroke.startsWith("#")) throw new Error("each series needs its own colour");
+}
+if (new Set(seriesPaths.map((node) => node.props.stroke)).size !== seriesPaths.length) throw new Error("two series must not share a colour");
+assert.equal(trendSvg.findAllByType("line").filter((node) => node.props.strokeDasharray === "3 4").length, 4, "the plot needs four dashed gridlines");
+const legendDots = renderer.root.findAll((node) => node.props?.className === "usg_trendLegendDot");
+assert.equal(legendDots.length, 2, "the legend lists every series");
+const legendItems = renderer.root.findAll((node) => typeof node.props?.["data-series"] === "string");
+assert.deepEqual(legendItems.map((node) => node.props["data-series"]), ["deepseek-official/deepseek-v4-flash", "ark/deepseek-v4-flash"]);
+const axisTicks = renderer.root.findAll((node) => node.props?.className === "usg_trendAxisTick");
+if (axisTicks.length < 2 || axisTicks.length > 7) throw new Error(`the date axis needs a sparse tick set, got ${axisTicks.length}`);
+for (const tick of axisTicks) {
+	if (typeof tick.props.style.left !== "string" || !tick.props.style.left.endsWith("%")) throw new Error("axis ticks must be positioned by percentage");
+}
+
+// Hovering a day shows the per-model breakdown card; leaving hides it.
+const dayHits = renderer.root.findAll((node) => typeof node.props?.["data-trend-day"] === "string");
+assert.equal(dayHits.length, 31, "every day of the month is a hover/click target");
+assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_trendTooltip").length, 0, "the hover card is not rendered before hover");
+const todayHitIndex = dayHits.findIndex((node) => node.props["data-trend-day"] === todayKeyOf());
+assert.equal(todayHitIndex >= 0, true, "today must have a hit target");
+await act(async () => {
+	dayHits[todayHitIndex].props.onMouseEnter();
+	await Promise.resolve();
+});
+const tooltip = renderer.root.findByProps({ className: "usg_trendTooltip" });
+assert.equal(tooltip.props.role, "status", "the hover card must announce its content");
+const tooltipRows = tooltip.findAll((node) => node.props?.className === "usg_trendTooltipRow");
+assert.equal(tooltipRows.length, 2, "the hover card lists every non-zero series for that day");
+const tooltipTitle = tooltip.findByProps({ className: "usg_trendTooltipTitle" });
+assert.equal(tooltipTitle.props.children, "usage.tooltipTitle", "the title is the localized date+total string");
+await act(async () => {
+	trendSvg.props.onMouseLeave();
+	await Promise.resolve();
+});
+assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_trendTooltip").length, 0, "leaving the plot must hide the hover card");
+
+// The model-share donut sits where the 14-day list used to.
+const donutSlices = renderer.root.findAll((node) => typeof node.props?.["data-donut-slice"] === "string");
+assert.deepEqual(donutSlices.map((node) => node.props["data-donut-slice"]), ["deepseek-official/deepseek-v4-flash", "ark/deepseek-v4-flash"], "the ring has one slice per model");
+const donutItems = renderer.root.findAll((node) => typeof node.props?.["data-donut-item"] === "string");
+assert.deepEqual(donutItems.map((node) => node.props["data-donut-item"]), ["deepseek-official/deepseek-v4-flash", "ark/deepseek-v4-flash"], "the legend mirrors the ring");
+const donutTotal = renderer.root.findByProps({ className: "usg_donutTotal" });
+assert.equal(donutTotal.props.children, "33.8M", "the ring centre shows the abbreviated period total");
+const donutValues = donutItems.map((item) => item.findAll((node) => node.props?.className === "usg_donutItemValue")[0].props.children);
+assert.deepEqual(donutValues, ["30M", "3.8M"], "each legend row shows its token count");
+const donutMeta = donutItems.map((item) => item.findAll((node) => node.props?.className === "usg_donutItemMeta")[0].props.children);
+assert.deepEqual(donutMeta, ["89%", "11%"], "each legend row shows its share");
+assert.equal(renderer.root.findAll((node) => node.props?.["data-model-rank"]).length, 0, "the retired today-by-model list must be gone");
+
+// The retired 14-day list must not come back, and the toggle must persist.
+assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_day").length, 0, "the 14-day list is gone");
 await act(async () => {
 	viewButtons[1].props.onClick();
 	await flushPanelEffects();
 });
-const svg = renderer.root.findAllByType("svg").find((node) => node.props?.className === "usg_curveSvg");
-if (svg === undefined) throw new Error("selecting the curve must render the SVG chart");
-assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_heatRow").length, 0, "the calendar must be replaced, not stacked");
-const curvePaths = svg.findAllByType("path").map((node) => node.props.d);
-assert.equal(curvePaths.length, 2, "the curve needs an area fill and a stroked line");
-for (const d of curvePaths) {
-	if (typeof d !== "string" || !d.startsWith("M ")) throw new Error(`the curve must be a path, got ${d}`);
-	// A Catmull-Rom-derived spline emits cubic segments; straight lines would mean
-	// the smoothing silently fell back to a polyline.
-	if (!d.includes(" C ")) throw new Error("the curve must be smoothed with cubic segments");
-}
-assert.equal(svg.findAllByType("rect").length >= 28, true, "every day of the month needs a hit target");
-assert.equal(readStoredView(localStorage), "curve", "switching the view must persist the choice");
+assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_heatRow").length > 0, true, "selecting the calendar renders the grid");
+assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_trendSvg").length, 0, "the trend is replaced, not stacked");
+assert.equal(readStoredView(localStorage), "heat", "switching the view must persist the choice");
+await act(async () => {
+	viewButtons[0].props.onClick();
+	await flushPanelEffects();
+});
+assert.equal(readStoredView(localStorage), "curve", "switching back must persist too");
+
+// Clicking a trend point opens that day's detail, exactly like a heatmap cell.
+const refreshedHits = renderer.root.findAll((node) => typeof node.props?.["data-trend-day"] === "string");
+await act(async () => {
+	refreshedHits.find((node) => node.props["data-trend-day"] === todayKeyOf()).props.onClick();
+	await flushPanelEffects();
+});
+const detail = renderer.root.findAll((node) => node.props?.className === "usg_detailSummary");
+assert.equal(detail.length, 1, "clicking a trend point must open the day detail");
+if (!String(detail[0].props.children).includes("33.8M")) throw new Error("the day detail must abbreviate too");
+await act(async () => {
+	renderer.root.findByProps({ "aria-label": "usage.back" }).props.onClick();
+	await Promise.resolve();
+});
+
+// Closing and reopening restores the persisted view.
 await act(async () => {
 	renderer.root.findByProps({ "aria-label": "action.close" }).props.onClick();
 	await Promise.resolve();
@@ -604,23 +725,7 @@ await act(async () => {
 	renderer.root.findByProps({ "data-usage-stats-badge": true }).props.onClick();
 	await flushPanelEffects();
 });
-assert.equal(readStoredView(localStorage), "curve", "reopening must keep the curve selection");
-assert.equal(renderer.root.findAllByType("svg").some((node) => node.props?.className === "usg_curveSvg"), true, "the persisted curve must render on reopen");
-
-// Clicking a curve point opens that day's detail, exactly like a heatmap cell.
-const todayPoint = renderer.root.findAll((node) => node.props?.["data-curve-day"] === todayKeyOf());
-assert.equal(todayPoint.length, 1, "today must have a curve hit target");
-await act(async () => {
-	todayPoint[0].props.onClick();
-	await flushPanelEffects();
-});
-const detail = renderer.root.findAll((node) => node.props?.className === "usg_detailSummary");
-assert.equal(detail.length, 1, "clicking a curve point must open the day detail");
-if (!String(detail[0].props.children).includes("33.8M")) throw new Error("the day detail must abbreviate too");
-await act(async () => {
-	renderer.root.findByProps({ "aria-label": "usage.back" }).props.onClick();
-	await Promise.resolve();
-});
+assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_trendSvg").length, 1, "reopening must restore the persisted trend view");
 
 const exportLinks = renderer.root.findAll((node) => typeof node.props?.["data-export-format"] === "string");
 assert.deepEqual(exportLinks.map((node) => node.props["data-export-format"]), ["daily-csv", "sessions-csv", "json"], "the panel must expose all three secret-free downloads without a new fetch loop");
@@ -636,7 +741,8 @@ await act(async () => {
 if (renderer.root.findAllByProps({ "data-usage-stats-panel": true }).length !== 0) throw new Error("close action must dismiss the panel");
 await act(async () => { renderer.unmount(); });
 
-// An empty day list must still render the shell (and say so) instead of throwing.
+// An empty month must still render the shell, with empty-state copy instead of a
+// broken ring or an axis with no samples.
 globalThis.fetch = async () => responseFixture({ ok: true, days: [], total: { tokens: 0 } });
 let emptyRenderer;
 await act(async () => {
@@ -647,10 +753,12 @@ await act(async () => {
 	emptyRenderer.root.findByProps({ "data-usage-stats-badge": true }).props.onClick();
 	await flushPanelEffects();
 });
-assert.equal(emptyRenderer.root.findAll((node) => node.props?.["data-model-rank"]).length, 0, "an empty day must render no ranking rows");
 if (emptyRenderer.root.findAllByProps({ "data-usage-stats-panel": true }).length !== 1) throw new Error("an empty usage response must still open the panel");
+assert.equal(emptyRenderer.root.findAll((node) => node.props?.["data-donut-slice"]).length, 0, "an empty month must not draw donut slices");
+assert.equal(emptyRenderer.root.findAll((node) => node.props?.["className"] === "usg_donutEmpty").length >= 1, true, "an empty month must explain itself");
+assert.equal(emptyRenderer.root.findAll((node) => node.props?.["className"] === "usg_trendEmpty").length, 1, "an empty trend must explain itself");
 await act(async () => { emptyRenderer.unmount(); });
 globalThis.fetch = originalFetch;
 
-console.log("sidebar-only usage panel, view toggle, and today-by-model ranking ok");
+console.log("sidebar-only usage panel, shared-row view toggle, trend chart and donut ok");
 console.log("SMOKE TEST PASSED");

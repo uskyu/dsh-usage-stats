@@ -2,7 +2,7 @@
   "manifestVersion": "1.0.0",
   "providerId": "io.github.uskyu.dsh-usage-stats",
   "name": "DSH Usage Stats",
-  "description": "Token usage analytics for the dsh web GUI: daily heatmap or curve, per-model rankings, costs, and exports. 标准来源接入（Path A），便于在 DSH 插件市场内通过 GUI 直接安装。",
+  "description": "Token usage analytics for the dsh web GUI: per-model daily trend, month share donut, calendar heatmap, costs, and exports. 标准来源接入（Path A），便于在 DSH 插件市场内通过 GUI 直接安装。",
   "homepage": "https://github.com/uskyu/dsh-usage-stats",
   "attribution": {
     "name": "uskyu",

@@ -1,8 +1,8 @@
 # v0.4.0 release notes
 
 `v0.4.0` is a focus release: the panel is now a token-usage dashboard, the package
-identity moved to `@uskyu/dsh-usage-stats`, and the monthly view gained a curve
-projection.
+identity moved to `@uskyu/dsh-usage-stats`, and the month view is a default
+multi-model daily trend with a model-usage donut beside it.
 
 ## Highlights
 
@@ -37,13 +37,18 @@ projection.
   Credentials remain server-side; the browser receives aggregate token usage and
   the export downloads only.
 
-### Today by model replaces the recent-session cost block
+### Model usage donut replaces the model list
 
-- The former "recent session costs" section is gone. In its place, "Today by
-  model" / "今日模型消耗" lists up to five `provider · model` rows sorted by
-  today's tokens, each with a share-of-today bar and an abbreviated token count
-  (the exact value stays available as a tooltip). An empty day shows an
-  explicit empty state.
+- The former "recent session costs" block and the intermediate "Today by model"
+  list are both gone. In their place, "Model usage" / "模型用量" shows a donut
+  for the **currently selected month**: the ring centre is that month's total
+  (abbreviated) and the list beside it renders one row per model — colour dot,
+  model name, percentage and token count — for up to five models, with the tail
+  merged into "其他模型（N）" / "Other models (N)".
+- Arc lengths come from the exact token fraction, never from the rounded legend
+  percentage: independent rounding makes displayed percentages sum past 100%
+  (e.g. 57+33+8+2+1), which would overlap the ring and leave a seam. The final
+  slice is sized to close the circumference exactly.
 - Session-level cost estimates remain in `usage.sessions`, the sessions CSV, the
   JSON export, and the billing aggregation; the panel just no longer lists them.
 
@@ -54,21 +59,27 @@ projection.
   K/M/B/T suffix (`33,818,571` → `33.8M`, `6,246,205,945` → `6.2B`,
   `999,999,999,999` → `1T`).
 - The exact grouped value stays available as a `title` tooltip on the same
-  element, and applies to the today/month/all-time cards, the last-14-days list,
-  the heatmap tooltips, and the today-by-model ranking.
+  element, and applies to the today/month/all-time cards, the trend tooltip and
+  the donut list.
 
-### Calendar ⇄ curve view for the current month
+### Multi-model daily trend replaces the single curve
 
-- A two-button segmented control under the "daily usage this month" title
-  switches between the existing calendar heatmap and a new curve view: a smooth
-  SVG line with a gradient area, sized to the panel width and scaled by square
-  root so a single peak does not flatten the rest of the month.
-- Both views share the same day selection: clicking a calendar cell, a curve
-  hit target, or a last-14-days row opens that day's per-model detail, and the
-  curve targets are focusable and respond to Enter/Space.
-- The choice is stored in the browser under
-  `@uskyu/dsh-usage-stats:view:v1` and restored on refresh; when storage is
-  unavailable the panel fails closed to the calendar view.
+- The default view is now "Daily token trend" / "每日 Token 趋势图": one smooth
+  Catmull-Rom line per model across the selected month, with a colour-dot legend
+  above, four dashed gridlines behind, and up to six date ticks below.
+- The y axis is linear and scaled to the **largest single series**, not the daily
+  total, so a busy day does not flatten every line into the bottom quarter. Days
+  without usage are zero points on the baseline rather than gaps.
+- Up to four models are drawn individually; the rest are merged into a grey
+  "其他模型（N）" series. Hovering a day opens a card with the date, the day's
+  total and each model's share; clicking a day (or pressing Enter/Space on its
+  focusable hit target) opens that day's per-model detail.
+- The view switch moved into the month-navigation row, immediately left of the
+  `‹ month ›` arrows (order: curve | calendar), so it no longer costs a separate
+  row. The choice is stored under `@uskyu/dsh-usage-stats:view:v1`; an unknown
+  stored value, disabled storage or a write failure falls back to the curve.
+- The standalone "recent 14 days" list was removed; the trend chart and the
+  donut cover the same period the calendar shows.
 
 ## Compatibility
 

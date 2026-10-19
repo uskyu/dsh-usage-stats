@@ -1,6 +1,6 @@
 {
   "name": "@uskyu/dsh-usage-stats",
-  "description": "Token usage analytics for the dsh web GUI: daily heatmap or curve, per-model rankings, cost estimates, budgets, and exports",
+  "description": "Token usage analytics for the dsh web GUI: a per-model daily trend, a month share donut, a calendar heatmap, costs, budgets, and exports",
   "version": "0.4.0",
   "repository": {
     "type": "git",

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" role="img" aria-labelledby="title desc">
   <title id="title">dsh-usage-stats token usage panel</title>
-  <desc id="desc">A sanitized vector preview of the DeepSeek Harness usage panel: today, month and all-time token totals, a monthly calendar heatmap with a calendar/curve view toggle, a today-by-model ranking, and secret-free export links.</desc>
+  <desc id="desc">A sanitized vector preview of the DeepSeek Harness usage panel: today, month and all-time token totals, a default multi-model daily trend chart with a hover card, a month-scoped model-usage donut, a curve/calendar view switch inside the month row, and secret-free export links.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#f7f9ff"/>
@@ -14,13 +14,16 @@
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
       <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#20355d" flood-opacity="0.14"/>
     </filter>
+    <filter id="card" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="6" stdDeviation="9" flood-color="#2b4d88" flood-opacity="0.16"/>
+    </filter>
     <style>
       text { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; fill: #172033; }
       .muted { fill: #718096; }
       .label { fill: #536179; font-size: 14px; font-weight: 600; }
       .tiny { fill: #7d899d; font-size: 12px; }
-      .day { fill: #5d687b; font-size: 11px; font-weight: 600; text-anchor: middle; dominant-baseline: middle; }
-      .day-light { fill: #ffffff; }
+      .tick { fill: #8a95a6; font-size: 9px; }
+      .legend { fill: #536179; font-size: 11px; }
       .row { font-size: 12px; }
     </style>
   </defs>
@@ -69,94 +72,123 @@
   </g>
   <text x="154" y="262" class="tiny">今日缓存命中率 98.7%</text>
 
-  <!-- Monthly view: title row, calendar/curve toggle, calendar heatmap -->
-  <text x="154" y="296" class="label">当月每日用量</text>
-  <text x="726" y="296" class="muted" font-size="20">‹</text>
-  <text x="772" y="296" font-size="15" font-weight="700" text-anchor="middle">2026年8月</text>
-  <text x="812" y="296" class="muted" font-size="20">›</text>
-
+  <!-- Month row: section title on the left, view switch immediately left of the month arrows -->
+  <text x="154" y="305" class="label">每日 Token 趋势图</text>
   <g>
-    <rect x="154" y="306" width="82" height="24" rx="7" fill="#eef1f6"/>
-    <rect x="155" y="307" width="40" height="22" rx="6" fill="#ffffff" stroke="#d7dfec"/>
-    <text x="175" y="322" font-size="11" text-anchor="middle" font-weight="500">日历</text>
-    <text x="215" y="322" font-size="11" text-anchor="middle" class="muted">曲线</text>
+    <rect x="598" y="288" width="96" height="24" rx="7" fill="#eef1f6"/>
+    <rect x="599" y="289" width="46" height="22" rx="6" fill="#ffffff" stroke="#d7dfec"/>
+    <text x="622" y="304" font-size="11" text-anchor="middle" font-weight="500">曲线</text>
+    <text x="670" y="304" font-size="11" text-anchor="middle" class="muted">日历</text>
   </g>
+  <text x="707" y="307" class="muted" font-size="20" text-anchor="middle">‹</text>
+  <text x="761" y="305" font-size="15" font-weight="700" text-anchor="middle">2026年10月</text>
+  <text x="812" y="307" class="muted" font-size="20" text-anchor="middle">›</text>
 
-  <g class="tiny" text-anchor="middle">
-    <text x="228" y="348">一</text><text x="314" y="348">二</text><text x="400" y="348">三</text><text x="486" y="348">四</text><text x="572" y="348">五</text><text x="658" y="348">六</text><text x="744" y="348">日</text>
-  </g>
+  <!-- Trend legend: one colour dot per series, long tail aggregated -->
   <g>
-    <!-- row 1: Aug 1 2026 falls on Saturday -->
-    <rect x="621" y="356" width="74" height="36" rx="9" fill="#edf0f5"/><text x="658" y="374" class="day">1</text>
-    <rect x="707" y="356" width="74" height="36" rx="9" fill="#edf0f5"/><text x="744" y="374" class="day">2</text>
-    <!-- row 2 -->
-    <rect x="191" y="396" width="74" height="36" rx="9" fill="#edf0f5"/><text x="228" y="414" class="day">3</text>
-    <rect x="277" y="396" width="74" height="36" rx="9" fill="#edf0f5"/><text x="314" y="414" class="day">4</text>
-    <rect x="363" y="396" width="74" height="36" rx="9" fill="#edf0f5"/><text x="400" y="414" class="day">5</text>
-    <rect x="449" y="396" width="74" height="36" rx="9" fill="#edf0f5"/><text x="486" y="414" class="day">6</text>
-    <rect x="535" y="396" width="74" height="36" rx="9" fill="#edf0f5"/><text x="572" y="414" class="day">7</text>
-    <rect x="621" y="396" width="74" height="36" rx="9" fill="#edf0f5"/><text x="658" y="414" class="day">8</text>
-    <rect x="707" y="396" width="74" height="36" rx="9" fill="#edf0f5"/><text x="744" y="414" class="day">9</text>
-    <!-- row 3 -->
-    <rect x="191" y="436" width="74" height="36" rx="9" fill="#edf0f5"/><text x="228" y="454" class="day">10</text>
-    <rect x="277" y="436" width="74" height="36" rx="9" fill="#edf0f5"/><text x="314" y="454" class="day">11</text>
-    <rect x="363" y="436" width="74" height="36" rx="9" fill="#dce9ff"/><text x="400" y="454" class="day">12</text>
-    <rect x="449" y="436" width="74" height="36" rx="9" fill="#2368f2"/><text x="486" y="454" class="day day-light">13</text>
-    <rect x="535" y="436" width="74" height="36" rx="9" fill="#4d8cf5"/><text x="572" y="454" class="day day-light">14</text>
-    <rect x="621" y="436" width="74" height="36" rx="9" fill="#a9c8fb" stroke="#2368f2"/><text x="658" y="454" class="day">15</text>
-    <rect x="707" y="436" width="74" height="36" rx="9" fill="#edf0f5"/><text x="744" y="454" class="day">16</text>
-    <!-- row 4 -->
-    <rect x="191" y="476" width="74" height="36" rx="9" fill="#dce9ff"/><text x="228" y="494" class="day">17</text>
-    <rect x="277" y="476" width="74" height="36" rx="9" fill="#4d8cf5"/><text x="314" y="494" class="day day-light">18</text>
-    <rect x="363" y="476" width="74" height="36" rx="9" fill="#edf0f5"/><text x="400" y="494" class="day">19</text>
-    <rect x="449" y="476" width="74" height="36" rx="9" fill="#a9c8fb"/><text x="486" y="494" class="day">20</text>
-    <rect x="535" y="476" width="74" height="36" rx="9" fill="#edf0f5"/><text x="572" y="494" class="day">21</text>
-    <rect x="621" y="476" width="74" height="36" rx="9" fill="#edf0f5"/><text x="658" y="494" class="day">22</text>
-    <rect x="707" y="476" width="74" height="36" rx="9" fill="#dce9ff"/><text x="744" y="494" class="day">23</text>
-    <!-- row 5 -->
-    <rect x="191" y="516" width="74" height="36" rx="9" fill="#edf0f5"/><text x="228" y="534" class="day">24</text>
-    <rect x="277" y="516" width="74" height="36" rx="9" fill="#a9c8fb"/><text x="314" y="534" class="day">25</text>
-    <rect x="363" y="516" width="74" height="36" rx="9" fill="#2368f2"/><text x="400" y="534" class="day day-light">26</text>
-    <rect x="449" y="516" width="74" height="36" rx="9" fill="#edf0f5"/><text x="486" y="534" class="day">27</text>
-    <rect x="535" y="516" width="74" height="36" rx="9" fill="#4d8cf5"/><text x="572" y="534" class="day day-light">28</text>
-    <rect x="621" y="516" width="74" height="36" rx="9" fill="#edf0f5"/><text x="658" y="534" class="day">29</text>
-    <rect x="707" y="516" width="74" height="36" rx="9" fill="#edf0f5"/><text x="744" y="534" class="day">30</text>
-    <!-- row 6 -->
-    <rect x="191" y="556" width="74" height="36" rx="9" fill="#edf0f5"/><text x="228" y="574" class="day">31</text>
-  </g>
-  <g transform="translate(154 604)">
-    <text x="0" y="12" class="tiny">少</text>
-    <rect x="28" y="2" width="13" height="13" rx="3" fill="#edf0f5"/><rect x="47" y="2" width="13" height="13" rx="3" fill="#dce9ff"/><rect x="66" y="2" width="13" height="13" rx="3" fill="#a9c8fb"/><rect x="85" y="2" width="13" height="13" rx="3" fill="#4d8cf5"/><rect x="104" y="2" width="13" height="13" rx="3" fill="#2368f2"/>
-    <text x="126" y="12" class="tiny">多</text>
+    <circle cx="158" cy="332" r="4" fill="#1f6feb"/>
+    <text x="170" y="336" class="legend">deepseek-official · deepseek-chat</text>
+    <circle cx="392" cy="332" r="4" fill="#12a150"/>
+    <text x="404" y="336" class="legend">ark · deepseek-chat</text>
+    <circle cx="158" cy="350" r="4" fill="#8b5cf6"/>
+    <text x="170" y="354" class="legend">openrouter · claude-sonnet-4</text>
+    <circle cx="392" cy="350" r="4" fill="#9aa0a6"/>
+    <text x="404" y="354" class="legend">其他模型（2）</text>
   </g>
 
-  <!-- Today by model: replacing the removed recent-session cost block -->
-  <text x="154" y="646" class="label">今日模型消耗</text>
+  <!-- Trend plot: four dashed gridlines, one smooth line per series, solid baseline -->
+  <g stroke="#e4e9f2" stroke-width="1" stroke-dasharray="4 4">
+    <line x1="154" y1="372" x2="818" y2="372"/>
+    <line x1="154" y1="410" x2="818" y2="410"/>
+    <line x1="154" y1="448" x2="818" y2="448"/>
+    <line x1="154" y1="486" x2="818" y2="486"/>
+  </g>
+  <line x1="154" y1="524" x2="818" y2="524" stroke="#cfd7e5" stroke-width="1"/>
+  <g fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke="#1f6feb" d="M 154 508.8 C 168.7 507.3 212.5 504.8 242 499.7 C 271.5 494.6 301.3 479.9 331 478.4 C 360.7 476.9 390.3 498.7 420 490.6 C 449.7 482.5 479.5 446.0 509 429.8 C 538.5 413.6 567.5 389.8 597 393.3 C 626.5 396.8 656.3 436.8 686 451 C 715.7 465.2 753.0 472.3 775 478.4 C 797.0 484.5 810.8 486.0 818 487.5"/>
+    <path stroke="#12a150" d="M 154 516.4 C 168.7 515.4 212.5 512.1 242 510.3 C 271.5 508.5 301.3 512.4 331 505.8 C 360.7 499.2 390.3 474.9 420 470.8 C 449.7 466.7 479.5 483.7 509 481.4 C 538.5 479.1 567.5 459.1 597 457.1 C 626.5 455.1 656.3 463.2 686 469.3 C 715.7 475.4 753.0 488.3 775 493.6 C 797.0 498.9 810.8 499.9 818 501.2"/>
+    <path stroke="#8b5cf6" d="M 154 521 C 168.7 520.0 212.5 516.4 242 514.9 C 271.5 513.4 301.3 512.8 331 511.8 C 360.7 510.8 390.3 511.3 420 508.8 C 449.7 506.3 479.5 497.1 509 496.6 C 538.5 496.1 567.5 508.8 597 505.8 C 626.5 502.8 656.3 486.0 686 478.4 C 715.7 470.8 753.0 462.2 775 460.2 C 797.0 458.2 810.8 465.2 818 466.2"/>
+    <path stroke="#9aa0a6" d="M 154 522.5 C 168.7 522.0 212.5 519.6 242 519.4 C 271.5 519.1 301.3 521.5 331 521 C 360.7 520.5 390.3 516.9 420 516.4 C 449.7 515.9 479.5 518.7 509 517.9 C 538.5 517.1 567.5 512.3 597 511.8 C 626.5 511.3 656.3 515.9 686 514.9 C 715.7 513.9 753.0 506.8 775 505.8 C 797.0 504.8 810.8 508.3 818 508.8"/>
+  </g>
+
+  <!-- Hover card: date, day total and the per-model split -->
+  <g filter="url(#card)">
+    <rect x="382" y="386" width="258" height="92" rx="8" fill="#ffffff" stroke="#e2e7f0"/>
+  </g>
+  <text x="394" y="406" font-size="11" fill="#718096">10-21 周三 · 1.0M tokens</text>
+  <g>
+    <circle cx="398" cy="422" r="3.5" fill="#1f6feb"/>
+    <text x="410" y="426" font-size="11" fill="#536179">deepseek-official · deepseek-chat</text>
+    <text x="628" y="426" font-size="11" font-weight="600" text-anchor="end">620K</text>
+    <circle cx="398" cy="442" r="3.5" fill="#12a150"/>
+    <text x="410" y="446" font-size="11" fill="#536179">ark · deepseek-chat</text>
+    <text x="628" y="446" font-size="11" font-weight="600" text-anchor="end">310K</text>
+    <circle cx="398" cy="462" r="3.5" fill="#8b5cf6"/>
+    <text x="410" y="466" font-size="11" fill="#536179">openrouter · claude-sonnet-4</text>
+    <text x="628" y="466" font-size="11" font-weight="600" text-anchor="end">96K</text>
+  </g>
+
+  <!-- Date ticks -->
+  <g class="tick">
+    <text x="154" y="546">1 日</text>
+    <text x="287" y="546" text-anchor="middle">7 日</text>
+    <text x="420" y="546" text-anchor="middle">13 日</text>
+    <text x="552" y="546" text-anchor="middle">19 日</text>
+    <text x="685" y="546" text-anchor="middle">25 日</text>
+    <text x="818" y="546" text-anchor="end">31 日</text>
+  </g>
+
+  <!-- Model usage donut for the selected month; arcs use the exact token fractions -->
+  <text x="154" y="570" class="label">模型用量</text>
+  <g>
+    <circle cx="218" cy="646" r="52" fill="none" stroke="#1f6feb" stroke-width="16" stroke-dasharray="153.56 326.73" stroke-dashoffset="0" transform="rotate(-90 218 646)"/>
+    <circle cx="218" cy="646" r="52" fill="none" stroke="#12a150" stroke-width="16" stroke-dasharray="84.95 326.73" stroke-dashoffset="-153.56" transform="rotate(-90 218 646)"/>
+    <circle cx="218" cy="646" r="52" fill="none" stroke="#8b5cf6" stroke-width="16" stroke-dasharray="49.01 326.73" stroke-dashoffset="-238.51" transform="rotate(-90 218 646)"/>
+    <circle cx="218" cy="646" r="52" fill="none" stroke="#e8590c" stroke-width="16" stroke-dasharray="26.14 326.73" stroke-dashoffset="-287.52" transform="rotate(-90 218 646)"/>
+    <circle cx="218" cy="646" r="52" fill="none" stroke="#9aa0a6" stroke-width="16" stroke-dasharray="13.07 326.73" stroke-dashoffset="-313.66" transform="rotate(-90 218 646)"/>
+    <text x="218" y="650" font-size="15" font-weight="600" text-anchor="middle">8.8M</text>
+    <text x="218" y="662" font-size="8" text-anchor="middle" fill="#7d899d">tokens</text>
+  </g>
   <g class="row">
-    <text x="154" y="677" fill="#536179">deepseek-official · deepseek-chat</text>
-    <rect x="370" y="668" width="208" height="6" rx="3" fill="#2368f2" opacity="0.65"/>
-    <text x="818" y="677" text-anchor="end" fill="#172033" font-variant-numeric="tabular-nums">620K</text>
-    <line x1="154" y1="690" x2="818" y2="690" stroke="#eef1f6"/>
+    <circle cx="306" cy="592" r="4" fill="#1f6feb"/>
+    <text x="318" y="596" fill="#536179">deepseek-official · deepseek-chat</text>
+    <text x="740" y="596" font-size="11" text-anchor="end" fill="#8a95a6">47%</text>
+    <text x="818" y="596" text-anchor="end">4.1M</text>
+    <line x1="300" y1="608" x2="818" y2="608" stroke="#eef1f6"/>
 
-    <text x="154" y="707" fill="#536179">ark · deepseek-chat</text>
-    <rect x="370" y="698" width="136" height="6" rx="3" fill="#2368f2" opacity="0.65"/>
-    <text x="818" y="707" text-anchor="end" fill="#172033" font-variant-numeric="tabular-nums">410K</text>
-    <line x1="154" y1="720" x2="818" y2="720" stroke="#eef1f6"/>
+    <circle cx="306" cy="622" r="4" fill="#12a150"/>
+    <text x="318" y="626" fill="#536179">ark · deepseek-chat</text>
+    <text x="740" y="626" font-size="11" text-anchor="end" fill="#8a95a6">26%</text>
+    <text x="818" y="626" text-anchor="end">2.3M</text>
+    <line x1="300" y1="638" x2="818" y2="638" stroke="#eef1f6"/>
 
-    <text x="154" y="737" fill="#536179">openrouter · claude-sonnet-4</text>
-    <rect x="370" y="728" width="32" height="6" rx="3" fill="#2368f2" opacity="0.65"/>
-    <text x="818" y="737" text-anchor="end" fill="#172033" font-variant-numeric="tabular-nums">96K</text>
+    <circle cx="306" cy="652" r="4" fill="#8b5cf6"/>
+    <text x="318" y="656" fill="#536179">openrouter · claude-sonnet-4</text>
+    <text x="740" y="656" font-size="11" text-anchor="end" fill="#8a95a6">15%</text>
+    <text x="818" y="656" text-anchor="end">1.3M</text>
+    <line x1="300" y1="668" x2="818" y2="668" stroke="#eef1f6"/>
+
+    <circle cx="306" cy="682" r="4" fill="#e8590c"/>
+    <text x="318" y="686" fill="#536179">zai · glm-4.6</text>
+    <text x="740" y="686" font-size="11" text-anchor="end" fill="#8a95a6">8%</text>
+    <text x="818" y="686" text-anchor="end">704K</text>
+    <line x1="300" y1="698" x2="818" y2="698" stroke="#eef1f6"/>
+
+    <circle cx="306" cy="712" r="4" fill="#9aa0a6"/>
+    <text x="318" y="716" fill="#536179">其他模型（3）</text>
+    <text x="740" y="716" font-size="11" text-anchor="end" fill="#8a95a6">4%</text>
+    <text x="818" y="716" text-anchor="end">352K</text>
   </g>
 
   <!-- Secret-free export -->
-  <text x="154" y="774" class="label">安全导出</text>
+  <text x="154" y="756" class="label">安全导出</text>
   <g>
-    <rect x="154" y="784" width="88" height="28" rx="9" fill="#f4f7fc" stroke="#e2e7f0"/>
-    <text x="198" y="802" font-size="12" text-anchor="middle" fill="#2b4d88">每日 CSV</text>
-    <rect x="252" y="784" width="88" height="28" rx="9" fill="#f4f7fc" stroke="#e2e7f0"/>
-    <text x="296" y="802" font-size="12" text-anchor="middle" fill="#2b4d88">会话 CSV</text>
-    <rect x="350" y="784" width="88" height="28" rx="9" fill="#f4f7fc" stroke="#e2e7f0"/>
-    <text x="394" y="802" font-size="12" text-anchor="middle" fill="#2b4d88">完整 JSON</text>
+    <rect x="154" y="766" width="88" height="28" rx="9" fill="#f4f7fc" stroke="#e2e7f0"/>
+    <text x="198" y="784" font-size="12" text-anchor="middle" fill="#2b4d88">每日 CSV</text>
+    <rect x="252" y="766" width="88" height="28" rx="9" fill="#f4f7fc" stroke="#e2e7f0"/>
+    <text x="296" y="784" font-size="12" text-anchor="middle" fill="#2b4d88">会话 CSV</text>
+    <rect x="350" y="766" width="88" height="28" rx="9" fill="#f4f7fc" stroke="#e2e7f0"/>
+    <text x="394" y="784" font-size="12" text-anchor="middle" fill="#2b4d88">完整 JSON</text>
   </g>
 
   <!-- Release callouts -->
@@ -165,22 +197,28 @@
     <text x="56" y="20" text-anchor="middle" fill="#2468db" font-size="12" font-weight="750">v0.4.0</text>
     <text x="0" y="78" font-size="38" font-weight="800">一个面板，</text>
     <text x="0" y="124" font-size="38" font-weight="800">看清 Token 用量</text>
-    <text x="0" y="166" font-size="16" class="muted">今日、本月、累计与模型排行统一呈现。</text>
-    <text x="0" y="192" font-size="16" class="muted">供应商账户查询已移除，后台只做本地聚合。</text>
+    <text x="0" y="166" font-size="16" class="muted">每个模型一条趋势线，环心是当月总量。</text>
+    <text x="0" y="192" font-size="16" class="muted">视图切换就在月份导航里，日历随时可切回。</text>
 
     <g transform="translate(0 244)">
       <rect width="390" height="86" rx="18" fill="#ffffff" stroke="#dfe6f2"/>
       <rect x="18" y="18" width="50" height="50" rx="15" fill="#eaf2ff"/>
-      <g fill="#246ff2"><rect x="28" y="46" width="8" height="12" rx="2"/><rect x="39" y="38" width="8" height="20" rx="2"/><rect x="50" y="30" width="8" height="28" rx="2"/></g>
-      <text x="86" y="39" font-size="15" font-weight="750">今日模型消耗</text>
-      <text x="86" y="61" font-size="13" class="muted">按 provider · model 排行与占比条</text>
+      <g fill="none" stroke="#246ff2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M28 52c7-2 10-14 15-14s8 11 14 6 8-16 15-18"/>
+        <path d="M28 58c6 0 9-6 14-6s9 8 16 4 9-12 14-13" stroke="#8fb6f8"/>
+      </g>
+      <text x="86" y="39" font-size="15" font-weight="750">每日趋势图</text>
+      <text x="86" y="61" font-size="13" class="muted">多模型分色折线，悬停看分项</text>
     </g>
     <g transform="translate(0 344)">
       <rect width="390" height="86" rx="18" fill="#ffffff" stroke="#dfe6f2"/>
       <rect x="18" y="18" width="50" height="50" rx="15" fill="#ecf9f2"/>
-      <path d="M30 54c6-14 10-22 15-22s7 12 11 12 6-8 9-14" fill="none" stroke="#20a566" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-      <text x="86" y="39" font-size="15" font-weight="750">日历 / 曲线视图</text>
-      <text x="86" y="61" font-size="13" class="muted">平滑折线 + 渐变面积，按平方根缩放</text>
+      <g transform="rotate(-90 43 43)">
+        <circle cx="43" cy="43" r="14" fill="none" stroke="#20a566" stroke-width="8" stroke-dasharray="52 88"/>
+        <circle cx="43" cy="43" r="14" fill="none" stroke="#7cc9a2" stroke-width="8" stroke-dasharray="34 88" stroke-dashoffset="-52"/>
+      </g>
+      <text x="86" y="39" font-size="15" font-weight="750">模型用量环形图</text>
+      <text x="86" y="61" font-size="13" class="muted">环心当月总量，列表看百分比</text>
     </g>
     <g transform="translate(0 444)">
       <rect width="390" height="86" rx="18" fill="#ffffff" stroke="#dfe6f2"/>

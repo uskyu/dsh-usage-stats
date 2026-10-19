@@ -52,10 +52,11 @@ npm pack --json
 The v0.4.0 panel is token-usage only. These checks replace the v0.3.5 account-card gates.
 
 - [ ] The sidebar footer entry and the panel title read "用量" / "Usage"; no "Balance" wording remains in the panel.
-- [ ] The panel renders today/month/all-time totals, the cache-hit caption, the calendar/curve toggle, the last-14-days list, the "Today by model" ranking, and the three export links — and no provider selector, balance card, subscription quota bar, account health, or OrcaRouter entry.
-- [ ] Values below 10,000 keep thousands separators (`1,234`); 10,000 and above abbreviate to at most four characters plus a K/M/B/T suffix (`33.8M`, `6.2B`, `1T`); hovering a value shows the exact number.
-- [ ] Switching to the curve view renders the smoothed SVG line with a gradient area on a square-root scale; clicking a day and pressing Enter/Space on a focused day both open that day's per-model detail, and the calendar/curve choice survives a browser refresh through `localStorage` key `@uskyu/dsh-usage-stats:view:v1`.
-- [ ] "Today by model" lists up to five `provider · model` rows sorted by today's tokens, each with a share-of-today bar and an abbreviated token count (exact value in the tooltip); a day without usage shows the empty-state text.
+- [ ] The panel renders today/month/all-time totals, the cache-hit caption, the trend/calendar view switch, the model-usage donut, and the three export links — and no provider selector, balance card, subscription quota bar, account health, or OrcaRouter entry. The old "recent 14 days" list must be gone.
+- [ ] Values below 10,000 keep thousands separators (`1,234`); 10,000 and above abbreviate to at most four characters plus a K/M/B/T suffix (`33.8M`, `6.2B`, `1T`); hovering a value shows the exact number on the totals cards, the trend tooltip and the donut list.
+- [ ] The view switch sits inside the month-navigation row, immediately left of the `‹ 2026年10月 ›` arrows (order: curve | calendar) and costs no extra vertical space. The curve view is the default; a stored `heat`/`curve` choice survives a browser refresh through `localStorage` key `@uskyu/dsh-usage-stats:view:v1`, and an unknown stored value falls back to the curve.
+- [ ] The trend chart draws one smooth coloured line per model over the selected month, with a colour-dot legend, four dashed gridlines, date ticks (`1 日` / `7 日` / …), and a hover card showing the day, the day total and each model's share. The y axis is linear and scaled to the largest single series, not the daily total. Up to four individual models are drawn; the rest are merged into a grey "其他模型（N）" series. Clicking a day (mouse or keyboard) opens that day's per-model detail.
+- [ ] The model-usage donut covers the currently selected month: the ring centre shows that month's total (abbreviated) and the list beside it shows colour dot, model name, percentage and token count for up to five models, with the tail merged into "其他模型（N）". Arc lengths must use the exact token fractions rather than the rounded legend percentages, so the ring closes without a seam.
 - [ ] The client issues no request to `/api/usage-stats/providers`, `/api/usage-stats/account`, `/api/usage-stats/balance`, `/api/usage-stats/subscriptions`, or `/api/usage-stats/integrations/orcarouter`: only `/api/usage-stats/usage` and the export downloads are called.
 - [ ] All account routes stay reachable and unchanged for external API consumers, while the background timer performs local token aggregation only.
 
@@ -109,10 +110,10 @@ Declarative balance:
 
 - [ ] Test the latest supported `@deepseek-ai/dsh` Desktop/Web release candidate with an isolated profile.
 - [ ] Confirm DSH starts without `Failed to load plugins` or loader identity errors.
-- [ ] Confirm client bundle load and that `sidebar.footer.action` is the only extension point registered by dsh-usage-stats; verify panel open/close, the calendar/curve toggle, today-by-model ranking, budget states, and manual refresh.
+- [ ] Confirm client bundle load and that `sidebar.footer.action` is the only extension point registered by dsh-usage-stats; verify panel open/close, the curve/calendar switch in the month row, the trend chart, the model-usage donut, budget states, and manual refresh.
 - [ ] At 700 / 500 / 400 / 320 px, confirm dsh-usage-stats registers no `conversation.input.*` component or composer DOM and leaves native Permission / Model / Context / Submit layout untouched. Record any remaining sub-400 px overlap as DSH host behavior rather than changing host controls from this plugin.
 - [ ] Test the sidebar action and panel in light and dark themes.
-- [ ] Confirm Last 14 days token values retain an 84 px minimum width, right alignment, and tabular numerals while the date column shrinks/ellipsizes without adding narrow-panel overflow (#75).
+- [ ] Confirm the month-navigation row still fits at narrow panel widths with the view switch, `‹ month ›` and the `回到今天` button, and that the trend legend wraps instead of overflowing.
 - [ ] Confirm the background timer performs local token aggregation only: with any `refresh.enabled` / `disableBackgroundRefresh` value, no background upstream account request is made and repeated panel refreshes return local aggregates. The legacy `refresh.*` / `disableBackgroundRefresh` keys must still be accepted so old configurations start unchanged (they now only gate server-side account-API caching, not the panel).
 - [ ] #53 and #14 are closed and are not v0.4.0 release blockers. If a real enterprise proxy or MiniMax Coding Plan environment is available, record sanitized observations; otherwise mark those checks `NOT TESTED` without claiming a fix.
 

@@ -6,9 +6,9 @@
 [![CI](https://github.com/uskyu/dsh-usage-stats/actions/workflows/ci.yml/badge.svg)](https://github.com/uskyu/dsh-usage-stats/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-2da44e)](LICENSE)
 
-为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 网页端提供 Token 用量分析：今日/本月/累计总量、缓存命中率、日历或曲线视图，以及模型级消耗排行。
+为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 网页端提供 Token 用量分析：今日/本月/累计总量、缓存命中率、按模型分色的每日趋势图、模型用量环形图，以及可切换的日历热图。
 
-Token-usage analytics for the DeepSeek Harness Web GUI (`dsh web`): today/month/all-time totals, cache-hit rates, a calendar or curve view, and a per-model ranking.
+Token-usage analytics for the DeepSeek Harness Web GUI (`dsh web`): today/month/all-time totals, cache-hit rates, a per-model daily trend chart, a model-usage donut, and a switchable calendar heatmap.
 
 ![dsh-usage-stats interface preview](docs/images/usage-panel.svg)
 
@@ -22,8 +22,9 @@ Token-usage analytics for the DeepSeek Harness Web GUI (`dsh web`): today/month/
 
 | | 能力 | 说明 |
 | --- | --- | --- |
-| 📊 | Token 用量分析 | 今日、本月、累计总量与缓存命中率；当月每日用量可在日历热图与曲线之间切换，并可下钻到某天的 `provider · model` 明细 |
-| 🏆 | 今日模型消耗 | 按 `provider · model` 列出今日 Token 排行（最多 5 行），中间为占今日总量的占比条，取代了旧的「最近会话费用」区块 |
+| 📊 | Token 用量分析 | 今日、本月、累计总量与缓存命中率；当月视图可在「曲线」与「日历」之间切换（默认曲线），点击任意一天可下钻到 `provider · model` 明细 |
+| 📈 | 每日趋势图 | 当月每个模型一条平滑彩色折线（默认视图），带颜色图例、4 条虚线网格与日期刻度；悬停浮层显示当天总量与各模型分项，超过 4 个模型时长尾合并为「其他模型（N）」 |
+| 🍩 | 模型用量 | 当月模型用量环形图：环心是当月总量，右侧列表显示色点、模型名、百分比与 token 数（最多 5 个模型，长尾同样合并为「其他模型（N）」） |
 | 🔢 | 紧凑数字显示 | 低于 10000 显示千分位原值（`1,234`），10000 及以上缩写为最多 4 位字符加 K/M/B/T 后缀（`33.8M`、`6.2B`）；鼠标悬停显示精确值 |
 | 💰 | 估算费用与预算 | 按事件时间匹配历史价格；配置预算后显示日/月预算状态行，完整费用估算随导出提供 |
 | 📦 | 安全导出 | 提供 daily/session CSV 与版本化 JSON；Unicode、CSV 公式前缀和不完整费用均安全处理 |
@@ -171,7 +172,7 @@ npx --yes github:uskyu/dsh-usage-stats --no-enable
 
 预算使用本机日历日/月边界：低于 80% 为正常，达到 80% 为 warning，达到 100% 为 critical。`daily` / `monthly` 必须是正数或 `null`；当前版本不做 FX 换算，因此预算货币与可靠价格货币不兼容时状态保持 unknown。预算状态显示在面板顶部三张 Token 卡片下方。
 
-面板不再有“当前供应商”选择器：旧版本保存在浏览器里的 provider 选择不再被读取，也不会显示在界面上。唯一由浏览器持久化的是视图偏好（日历或曲线），保存在 `localStorage` 的 `@uskyu/dsh-usage-stats:view:v1` 键下；存储被禁用或写入失败时回退到日历视图，不会写入 DSH 设置或服务端。
+面板不再有“当前供应商”选择器：旧版本保存在浏览器里的 provider 选择不再被读取，也不会显示在界面上。唯一由浏览器持久化的是视图偏好（曲线或日历），保存在 `localStorage` 的 `@uskyu/dsh-usage-stats:view:v1` 键下；存储被禁用、写入失败或存有未知值时回退到默认的曲线视图，不会写入 DSH 设置或服务端。
 
 ### 余额型供应商
 
@@ -348,12 +349,14 @@ Passion（provider id 为 `passion` 或域名为 `*.passionapi.com`）会自动�
 
 1. 点击侧边栏“用量”；角标显示今日 Token。
 2. 顶部三张卡片显示今日、本月、累计 Token，缓存命中率显示在卡片下方。低于 10000 的数字显示千分位原值，10000 及以上缩写为最多 4 位字符加 K/M/B/T 后缀（如 `33.8M`、`6.2B`）；鼠标悬停在数字上可看到精确值。
-3. 在“当月每日用量”标题下方用「日历 / 曲线」分段按钮切换视图：日历是默认的蓝色热图，曲线是平滑折线 + 渐变面积图，纵轴按平方根缩放以免单日峰值压平其余日期；两边的日期选择保持一致。
-4. 使用 `‹` / `›` 切换月份，`回到今天` 返回当月；点击热图格子、曲线上的日期或“最近 14 天”的某一行，打开当天的 provider/model 明细。
-5. “今日模型消耗”按 `provider · model` 列出今天 Token 最多的 5 行：左侧是模型标签，中间是占今日总量的占比条，右侧是缩写后的 Token（悬停显示精确值）。今天没有用量时显示空状态提示。
-6. 标题栏刷新只重新读取 Token 用量聚合；面板不会发起任何账户或上游请求。
+3. 「每日 Token 趋势图」是默认视图：当前选中的月份里，每个模型一条平滑彩色折线，上方是颜色圆点图例，背后有 4 条虚线网格线，底部是日期刻度（如 `1 日` / `7 日` / `13 日` …）。纵轴按**单条系列的最大值**线性缩放，因此单条曲线的起伏不会被总量压平；没有用量的日期记作 0 而不是断点。最多单独绘制 4 个模型，其余按灰色「其他模型（N）」聚合。
+4. 鼠标悬停在趋势图上会显示浮层卡片（日期 + 当天总量 + 各模型分项，分项悬停可看精确值）；点击某一天进入该天的 `provider · model` 明细。
+5. 视图切换在月份导航同一行、`‹ 2026年10月 ›` 箭头的左侧，顺序是「曲线」/「日历」，不额外占用垂直空间；切到日历即为原来的蓝色热图，两边共享同一天的选择。
+6. 使用 `‹` / `›` 切换月份，`回到今天` 返回当月。
+7. 「模型用量」环形图按**当前选中的月份**统计：左侧 SVG 环的中心是当月总量（缩写），右侧列表每行是色点 / 模型名 / 百分比 / token 数（悬停显示精确值）；最多列出 5 个模型，长尾合并为「其他模型（N）」。环的弧长按精确 token 比例绘制，图例百分比是四舍五入后的显示值，两者相加可能不等于 100%，这是刻意避免环形出现缝隙。
+8. 标题栏刷新只重新读取 Token 用量聚合；面板不会发起任何账户或上游请求。
 
-视图偏好保存在浏览器 `localStorage` 的 `@uskyu/dsh-usage-stats:view:v1` 键下，刷新页面或重启 DSH 后恢复；隐私模式或禁用存储时回退到日历视图。旧的“最近会话费用”区块已移除，会话级费用仍随 CSV/JSON 导出提供。
+视图偏好保存在浏览器 `localStorage` 的 `@uskyu/dsh-usage-stats:view:v1` 键下，刷新页面或重启 DSH 后恢复；隐私模式、禁用存储或存有未知值时回退到默认的曲线视图。旧的“最近会话费用”区块已移除，会话级费用仍随 CSV/JSON 导出提供。
 
 ### 安全导出 / Secret-free export
 
@@ -365,7 +368,7 @@ Passion（provider id 为 `passion` 或域名为 `*.passionapi.com`）会自动�
 
 CSV 使用 UTF-8、RFC 4180 引号与 spreadsheet formula 防护；Unicode 标题可直接打开。费用只在 `costComplete=true` 时导出，未知/混合币种保持空白或 `null`，不会输出部分金额。
 
-“最近 14 天”按本地日历计算，只显示窗口内存在用量的日期；未来时间戳不会计入。同一模型来自不同 provider 时会分别统计，例如 `deepseek-official · deepseek-chat` 与 `ark · deepseek-chat`。
+同一模型来自不同 provider 时按 `provider · model` 分别统计，例如 `deepseek-official · deepseek-chat` 与 `ark · deepseek-chat`；趋势图与模型用量环形图都遵循这一口径。
 
 ## Agent 友好安装 / Agent-friendly installation
 

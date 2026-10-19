@@ -403,9 +403,19 @@ if (!dayDetail.includes("ark · deepseek-v4-flash")) throw new Error("same model
 if (dayDetail.length < 500) throw new Error("day detail markup too small");
 console.log("day detail render ok (provider-prefixed models), markup length:", dayDetail.length);
 
-// The daily trend: one series per model over the whole month, a stable ranking,
-// an aggregate bucket for the tail, and geometry that stays inside the box.
-const { buildMonthTrend, buildModelShare, donutSegments, smoothPath } = exports_;
+// The analysis window is a rolling range that ENDS TODAY, so the x axis never
+// runs through days that have not happened yet.
+const { buildDailyTrend, buildModelShare, donutSegments, smoothPath, recentDayKeys, axisLabelOf, RANGE_DAYS, DEFAULT_RANGE, RANGE_STORAGE_KEY, readStoredRange, writeStoredRange } = exports_;
+const fixedNow = new Date(2026, 7, 4, 12, 0, 0);
+const weekKeys = recentDayKeys(7, fixedNow);
+assert.equal(weekKeys.length, 7, "a week window is seven samples");
+assert.equal(weekKeys[6], "2026-08-04", "the window always ends today");
+assert.equal(weekKeys[0], "2026-07-29", "and starts six days earlier, crossing the month boundary correctly");
+assert.equal(recentDayKeys(30, fixedNow).at(-1), "2026-08-04", "the month window also ends today");
+assert.equal(recentDayKeys(30, fixedNow).length, 30);
+assert.equal(axisLabelOf("2026-08-04"), "8/4", "axis labels are compact M/D");
+assert.equal(axisLabelOf("2026-01-09"), "1/9", "and drop the leading zero");
+
 const trendDays = new Map();
 const trendModels = [
 	["deepseek-official/deepseek-v4-flash", [10, 40, 0, 25]],
@@ -414,23 +424,36 @@ const trendModels = [
 	["relay-a/glm-4.6", [0, 0, 2, 1]],
 	["relay-b/qwen3", [0, 1, 0, 0]]
 ];
-trendDays.set("2026-08-01", { date: "2026-08-01", tokens: 16, models: trendModels.map(([model, values]) => ({ model, tokens: values[0] })) });
-trendDays.set("2026-08-02", { date: "2026-08-02", tokens: 51, models: trendModels.map(([model, values]) => ({ model, tokens: values[1] })) });
-trendDays.set("2026-08-03", { date: "2026-08-03", tokens: 35, models: trendModels.map(([model, values]) => ({ model, tokens: values[2] })) });
-trendDays.set("2026-08-04", { date: "2026-08-04", tokens: 30, models: trendModels.map(([model, values]) => ({ model, tokens: values[3] })) });
-const trend = buildMonthTrend(trendDays, 2026, 7, { labelOf: (key) => `L:${key}` });
-assert.equal(trend.days.length, 31, "every day of the month is a sample so the x axis stays a real time axis");
+const trendKeys = ["2026-08-01", "2026-08-02", "2026-08-03", "2026-08-04"];
+trendKeys.forEach((key, index) => {
+	trendDays.set(key, {
+		date: key,
+		tokens: trendModels.reduce((sum, [, values]) => sum + values[index], 0),
+		models: trendModels.map(([model, values]) => ({ model, tokens: values[index] }))
+	});
+});
+
+// A window with no usage still spans its full length.
+const emptyTrend = buildDailyTrend(new Map(), weekKeys);
+assert.equal(emptyTrend.days.length, 7, "an empty window still spans the whole range");
+assert.equal(emptyTrend.series.length, 0, "a window with no usage has no series");
+assert.equal(emptyTrend.max, 0);
+assert.equal(emptyTrend.days.at(-1).key, "2026-08-04", "the last sample is always the last day in the window");
+
+const trend = buildDailyTrend(trendDays, trendKeys, { labelOf: (key) => `L:${key}` });
+assert.equal(trend.days.length, 4, "one sample per day in the window");
 assert.equal(trend.series.length, 5, "four named series plus the aggregate bucket");
 assert.deepEqual(trend.series.slice(0, 4).map((s) => s.key), [
 	"deepseek-official/deepseek-v4-flash",
 	"ark/deepseek-v4-flash",
 	"opencode-go/deepseek-v4.1-flash",
 	"relay-a/glm-4.6"
-], "series must be ranked by the month total, so colours stay stable across renders");
+], "series must be ranked by the window total, so colours stay stable across renders");
 assert.equal(trend.series[4].aggregate, true, "the fifth model folds into the aggregate bucket");
 assert.equal(trend.series[4].count, 1);
 assert.equal(trend.series[0].label, "L:deepseek-official/deepseek-v4-flash", "series labels come from the injected labeller");
 assert.equal(trend.days[0].total, 16, "each sample carries the day total");
+assert.equal(trend.days[0].label, "8/1", "each sample carries its axis label");
 assert.deepEqual(trend.days[1].values.map((v) => v.value), [40, 8, 2, 0, 1], "each sample breaks down per series, including the aggregate");
 assert.equal(trend.max, 40, "the scale is the largest single series value, not the daily total");
 for (const day of trend.days) {
@@ -449,16 +472,18 @@ assert.equal(trend.gridLines.length, 4, "four dashed gridlines above the baselin
 for (const line of trend.gridLines) {
 	if (line.y < 0 || line.y > trend.baseline) throw new Error("gridlines must stay inside the plot box");
 }
-if (trend.ticks.length > 7 || trend.ticks[0].day !== 1) throw new Error(`date ticks must start at day 1 and stay sparse, got ${trend.ticks.length}`);
-const emptyTrend = buildMonthTrend(new Map(), 2026, 7);
-assert.equal(emptyTrend.series.length, 0, "a month with no usage has no series");
-assert.equal(emptyTrend.days.length, 31, "but it still spans the whole month");
-assert.equal(emptyTrend.max, 0);
+if (trend.ticks.length > 5) throw new Error(`date ticks must stay sparse, got ${trend.ticks.length}`);
+assert.equal(trend.ticks[0].key, trendKeys[0], "the first tick is the window's first day");
+assert.equal(trend.ticks.at(-1).key, trendKeys.at(-1), "the last tick is the window's last day, i.e. today");
+// A single-day window must not divide by zero.
+const oneDay = buildDailyTrend(trendDays, ["2026-08-02"]);
+assert.equal(oneDay.days.length, 1);
+assert.equal(oneDay.days[0].x, 0);
 if (smoothPath([]) !== "" || smoothPath([{ x: 1, y: 2 }]) !== "M 1 2") throw new Error("the spline helper must be defensive about short inputs");
 console.log("daily trend series ok:", trend.series.length, "series,", trend.days.length, "days,", trend.ticks.length, "ticks");
 
-// The month model share behind the donut.
-const share = buildModelShare(trendDays, 2026, 7);
+// The model share behind the donut covers the SAME window.
+const share = buildModelShare(trendDays, trendKeys);
 assert.equal(share.total, 132, "the share denominator is the sum of every model-day bucket");
 assert.deepEqual(share.items.map((item) => item.key), [
 	"deepseek-official/deepseek-v4-flash",
@@ -466,17 +491,18 @@ assert.deepEqual(share.items.map((item) => item.key), [
 	"opencode-go/deepseek-v4.1-flash",
 	"relay-a/glm-4.6",
 	"relay-b/qwen3"
-], "a five-model month needs no aggregate bucket");
+], "a five-model window needs no aggregate bucket");
 assert.equal(share.items[0].tokens, 75);
 assert.equal(share.items[0].percent, 57);
 assert.equal(share.items.reduce((sum, item) => sum + item.tokens, 0), share.total, "the slices must add up to the total");
-const cappedShare = buildModelShare(trendDays, 2026, 7, { limit: 3 });
+const cappedShare = buildModelShare(trendDays, trendKeys, { limit: 3 });
 assert.equal(cappedShare.items.length, 4, "the capped ranking keeps its aggregate bucket");
 assert.equal(cappedShare.items[3].aggregate, true);
 assert.equal(cappedShare.items[3].count, 2);
 assert.equal(cappedShare.items.reduce((sum, item) => sum + item.tokens, 0), cappedShare.total, "aggregating must not lose tokens");
-assert.equal(buildModelShare(new Map(), 2026, 7).items.length, 0, "an empty month produces no slices");
-assert.equal(buildModelShare(new Map(), 2026, 7).total, 0);
+assert.equal(buildModelShare(new Map(), weekKeys).items.length, 0, "an empty window produces no slices");
+assert.equal(buildModelShare(new Map(), weekKeys).total, 0);
+
 // Donut geometry: dash segments must tile the circumference exactly once. The
 // legend percentages are independently rounded, so the arcs must NOT use them.
 const segments = donutSegments(share.items, 52, share.total);
@@ -619,16 +645,21 @@ const statValues = renderer.root.findAll((node) => node.props?.className === "us
 assert.deepEqual(statValues.map((node) => node.props.children), ["33.8M", "33.8M", "6.2B"], "the three stat cards must abbreviate");
 assert.deepEqual(statValues.map((node) => node.props.title), ["33,818,571", "33,818,571", "6,246,205,945"], "each stat card must keep the exact value in its tooltip");
 
-// The view toggle shares the month row and comes BEFORE the month arrows, so it
-// adds no vertical space. The trend is the default view.
+// The header row carries a range switch and a view switch, in that order, so
+// neither costs a row of its own. The month arrows only page the calendar, so
+// they are absent in the trend view. The trend is the default.
+const rangeButtons = renderer.root.findAll((node) => typeof node.props?.["data-range"] === "string");
+assert.deepEqual(rangeButtons.map((node) => node.props["data-range"]), ["week", "month"], "the range switch offers a week first, then a month");
+assert.equal(rangeButtons[0].props["aria-pressed"], true, "the 7-day window is the default");
 const viewButtons = renderer.root.findAll((node) => typeof node.props?.["data-view"] === "string");
-assert.deepEqual(viewButtons.map((node) => node.props["data-view"]), ["curve", "heat"], "the month row must offer the curve first, then the calendar");
+assert.deepEqual(viewButtons.map((node) => node.props["data-view"]), ["curve", "heat"], "the view switch offers the curve first, then the calendar");
 assert.equal(viewButtons[0].props["aria-pressed"], true, "the trend is the default view");
 const monthHeader = renderer.root.findByProps({ className: "usg_heatHeader" });
-const headerOrder = monthHeader.findAll((node) => node.props?.["data-view"] !== void 0 || node.props?.className === "usg_monthNav");
-const monthNavNode = headerOrder.find((node) => node.props?.className === "usg_monthNav");
-const toggleIndex = monthNavNode.props.children.findIndex((child) => child?.props?.className === "usg_viewToggle");
-assert.equal(toggleIndex, 0, "the view toggle must be the first thing inside the month nav, i.e. left of the arrows");
+const monthNavNode = monthHeader.findByProps({ className: "usg_monthNav" });
+const groups = monthNavNode.props.children.filter((child) => child !== null && child !== undefined && child !== false);
+assert.equal(groups[0].props["aria-label"], "usage.rangeToggle", "the range group must be the first control on the month row");
+assert.equal(groups[1].props["aria-label"], "usage.viewToggle", "the view group must sit immediately right of the range group");
+assert.equal(groups.length, 2, "the trend view must not render the calendar's month arrows");
 assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_heatRow").length, 0, "the calendar stays hidden while the trend is selected");
 
 // The trend: one smoothed path per series, a legend, gridlines and a date axis.
@@ -651,15 +682,17 @@ if (axisTicks.length < 2 || axisTicks.length > 7) throw new Error(`the date axis
 for (const tick of axisTicks) {
 	if (typeof tick.props.style.left !== "string" || !tick.props.style.left.endsWith("%")) throw new Error("axis ticks must be positioned by percentage");
 }
+// The window is 7 days by default and ends TODAY: the last hit target is today,
+// which is the user's complaint about the axis running past the data.
+const dayHits = renderer.root.findAll((node) => typeof node.props?.["data-trend-day"] === "string");
+assert.equal(dayHits.length, 7, "the default 7-day window renders seven hover targets");
+assert.equal(dayHits.at(-1).props["data-trend-day"], todayKeyOf(), "the window's last sample must be today");
+assert.equal(axisTicks.at(-1).props.children, `${new Date().getMonth() + 1}/${new Date().getDate()}`, "the axis must end on today's date");
 
 // Hovering a day shows the per-model breakdown card; leaving hides it.
-const dayHits = renderer.root.findAll((node) => typeof node.props?.["data-trend-day"] === "string");
-assert.equal(dayHits.length, 31, "every day of the month is a hover/click target");
 assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_trendTooltip").length, 0, "the hover card is not rendered before hover");
-const todayHitIndex = dayHits.findIndex((node) => node.props["data-trend-day"] === todayKeyOf());
-assert.equal(todayHitIndex >= 0, true, "today must have a hit target");
 await act(async () => {
-	dayHits[todayHitIndex].props.onMouseEnter();
+	dayHits[dayHits.length - 1].props.onMouseEnter();
 	await Promise.resolve();
 });
 const tooltip = renderer.root.findByProps({ className: "usg_trendTooltip" });
@@ -674,33 +707,83 @@ await act(async () => {
 });
 assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_trendTooltip").length, 0, "leaving the plot must hide the hover card");
 
-// The model-share donut sits where the 14-day list used to.
+// The model-share donut sits where the 14-day list used to, with a hover card
+// and a two-way highlight against its legend.
 const donutSlices = renderer.root.findAll((node) => typeof node.props?.["data-donut-slice"] === "string");
 assert.deepEqual(donutSlices.map((node) => node.props["data-donut-slice"]), ["deepseek-official/deepseek-v4-flash", "ark/deepseek-v4-flash"], "the ring has one slice per model");
 const donutItems = renderer.root.findAll((node) => typeof node.props?.["data-donut-item"] === "string");
 assert.deepEqual(donutItems.map((node) => node.props["data-donut-item"]), ["deepseek-official/deepseek-v4-flash", "ark/deepseek-v4-flash"], "the legend mirrors the ring");
+assert.equal(renderer.root.findAll((node) => node.props?.["data-donut-tooltip"]).length, 0, "no slice card before hover");
+await act(async () => {
+	donutSlices[0].props.onMouseEnter();
+	await Promise.resolve();
+});
+const donutTooltip = renderer.root.findByProps({ "data-donut-tooltip": "deepseek-official/deepseek-v4-flash" });
+const tooltipName = donutTooltip.findByProps({ className: "usg_donutTooltipName" });
+assert.equal(tooltipName.props.children, "deepseek-official · deepseek-v4-flash", "the card names the hovered model");
+const tooltipValue = donutTooltip.findByProps({ className: "usg_donutTooltipFigures" });
+assert.equal(tooltipValue.props.children[0].props.children, "30M", "the card shows the hovered slice's consumption");
+assert.equal(tooltipValue.props.children[1].props.children, "89%", "and its share");
+// Slice hover must highlight the matching legend row...
+assert.equal(renderer.root.findByProps({ "data-donut-item": "deepseek-official/deepseek-v4-flash" }).props["data-active"], "true", "hovering a slice must highlight its legend row");
+assert.equal(renderer.root.findByProps({ "data-donut-item": "ark/deepseek-v4-flash" }).props["data-active"], void 0, "and only that row");
+// ...and the slice itself must thicken.
+assert.equal(renderer.root.findByProps({ "data-donut-slice": "deepseek-official/deepseek-v4-flash" }).props["data-active"], "true", "the hovered slice must be visually distinct");
+// Legend hover must drive the slice the other way round.
+await act(async () => {
+	renderer.root.findByProps({ "data-donut-item": "ark/deepseek-v4-flash" }).props.onMouseEnter();
+	await Promise.resolve();
+});
+assert.equal(renderer.root.findByProps({ "data-donut-slice": "ark/deepseek-v4-flash" }).props["data-active"], "true", "hovering a legend row must highlight its slice");
+assert.equal(renderer.root.findByProps({ "data-donut-slice": "deepseek-official/deepseek-v4-flash" }).props["data-active"], void 0, "and clear the previous one");
+await act(async () => {
+	renderer.root.findByProps({ "data-donut-item": "ark/deepseek-v4-flash" }).props.onMouseLeave();
+	await Promise.resolve();
+});
+assert.equal(renderer.root.findAll((node) => node.props?.["data-donut-tooltip"]).length, 0, "leaving the legend must hide the card");
 const donutTotal = renderer.root.findByProps({ className: "usg_donutTotal" });
-assert.equal(donutTotal.props.children, "33.8M", "the ring centre shows the abbreviated period total");
+assert.equal(donutTotal.props.children, "33.8M", "the ring centre shows the abbreviated window total");
 const donutValues = donutItems.map((item) => item.findAll((node) => node.props?.className === "usg_donutItemValue")[0].props.children);
 assert.deepEqual(donutValues, ["30M", "3.8M"], "each legend row shows its token count");
 const donutMeta = donutItems.map((item) => item.findAll((node) => node.props?.className === "usg_donutItemMeta")[0].props.children);
 assert.deepEqual(donutMeta, ["89%", "11%"], "each legend row shows its share");
 assert.equal(renderer.root.findAll((node) => node.props?.["data-model-rank"]).length, 0, "the retired today-by-model list must be gone");
 
-// The retired 14-day list must not come back, and the toggle must persist.
+// The retired 14-day list must not come back.
 assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_day").length, 0, "the 14-day list is gone");
+
+// Switching the range re-windows both charts; the month arrows appear with the
+// calendar view only.
 await act(async () => {
-	viewButtons[1].props.onClick();
+	rangeButtons[1].props.onClick();
+	await flushPanelEffects();
+});
+assert.equal(renderer.root.findAll((node) => node.props?.["data-trend-day"]).length, 30, "the month range renders a 30-day window");
+assert.equal(renderer.root.findAll((node) => node.props?.["data-trend-day"]).at(-1).props["data-trend-day"], todayKeyOf(), "and it still ends today");
+assert.equal(readStoredRange(localStorage), "month", "the range choice must persist");
+await act(async () => {
+	rangeButtons[0].props.onClick();
+	await flushPanelEffects();
+});
+assert.equal(renderer.root.findAll((node) => node.props?.["data-trend-day"]).length, 7, "switching back restores the 7-day window");
+assert.equal(readStoredRange(localStorage), "week");
+
+// Month navigation belongs to the calendar.
+await act(async () => {
+	renderer.root.findAll((node) => node.props?.["data-view"] === "heat")[0].props.onClick();
 	await flushPanelEffects();
 });
 assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_heatRow").length > 0, true, "selecting the calendar renders the grid");
 assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_trendSvg").length, 0, "the trend is replaced, not stacked");
+assert.equal(renderer.root.findAll((node) => node.props?.["aria-label"] === "action.prevMonth").length, 1, "the calendar view restores the month arrows");
 assert.equal(readStoredView(localStorage), "heat", "switching the view must persist the choice");
 await act(async () => {
-	viewButtons[0].props.onClick();
+	renderer.root.findAll((node) => node.props?.["data-view"] === "curve")[0].props.onClick();
 	await flushPanelEffects();
 });
 assert.equal(readStoredView(localStorage), "curve", "switching back must persist too");
+assert.equal(renderer.root.findAll((node) => node.props?.["aria-label"] === "action.prevMonth").length, 0, "the trend view hides the month arrows again");
+
 
 // Clicking a trend point opens that day's detail, exactly like a heatmap cell.
 const refreshedHits = renderer.root.findAll((node) => typeof node.props?.["data-trend-day"] === "string");

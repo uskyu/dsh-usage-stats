@@ -1,8 +1,9 @@
 # v0.4.0 release notes
 
 `v0.4.0` is a focus release: the panel is now a token-usage dashboard, the package
-identity moved to `@uskyu/dsh-usage-stats`, and the month view is a default
-multi-model daily trend with a model-usage donut beside it.
+identity moved to `@uskyu/dsh-usage-stats`, and the analysis area is a default
+multi-model daily trend over a rolling 7-day/1-month window, with a model-usage
+donut over the same window.
 
 ## Highlights
 
@@ -37,14 +38,34 @@ multi-model daily trend with a model-usage donut beside it.
   Credentials remain server-side; the browser receives aggregate token usage and
   the export downloads only.
 
+### Rolling time range drives the trend and the donut
+
+- A new range switch ("近 7 天" / "近 1 个月") sits at the far left of the
+  analysis header row, with the view switch ("曲线" / "日历") to its right. Both
+  windows are **rolling and end today**: 7 days including today, or the last 30
+  calendar days, so they cross month boundaries correctly. The default is
+  "近 7 天".
+- One window feeds both charts, so the ring always describes the same period as
+  the lines. The choice is stored under `@uskyu/dsh-usage-stats:range:v1`
+  (`week` / `month`); an unknown value, disabled storage or a write failure falls
+  back to `week`.
+- The month navigation (`‹` / `›` and `回到今天`) now appears **only in the
+  calendar view**: the rolling window is independent of the calendar month, and
+  month arrows next to a rolling chart wrongly suggest the trend range can be
+  paged.
+
 ### Model usage donut replaces the model list
 
 - The former "recent session costs" block and the intermediate "Today by model"
   list are both gone. In their place, "Model usage" / "模型用量" shows a donut
-  for the **currently selected month**: the ring centre is that month's total
-  (abbreviated) and the list beside it renders one row per model — colour dot,
-  model name, percentage and token count — for up to five models, with the tail
-  merged into "其他模型（N）" / "Other models (N)".
+  for the **same rolling window as the trend**: the ring centre is the window
+  total (abbreviated) and the list beside it renders one row per model — colour
+  dot, model name, percentage and token count — for up to five models, with the
+  tail merged into "其他模型（N）" / "Other models (N)".
+- Hovering a slice thickens it, shows a compact card over the ring centre
+  (model name, tokens, share) and highlights the matching list row; hovering a
+  list row highlights the matching slice and shows the same card. The card
+  replaces the centre total while it is visible.
 - Arc lengths come from the exact token fraction, never from the rounded legend
   percentage: independent rounding makes displayed percentages sum past 100%
   (e.g. 57+33+8+2+1), which would overlap the ring and leave a seam. The final
@@ -59,14 +80,20 @@ multi-model daily trend with a model-usage donut beside it.
   K/M/B/T suffix (`33,818,571` → `33.8M`, `6,246,205,945` → `6.2B`,
   `999,999,999,999` → `1T`).
 - The exact grouped value stays available as a `title` tooltip on the same
-  element, and applies to the today/month/all-time cards, the trend tooltip and
-  the donut list.
+  element, and applies to the today/month/all-time cards, the trend tooltip, the
+  donut tooltip and the donut list.
 
 ### Multi-model daily trend replaces the single curve
 
 - The default view is now "Daily token trend" / "每日 Token 趋势图": one smooth
-  Catmull-Rom line per model across the selected month, with a colour-dot legend
+  Catmull-Rom line per model across the rolling window, with a colour-dot legend
   above, four dashed gridlines behind, and up to six date ticks below.
+- The spline tension was raised from 0.5 to 1.0, so the trough between two peaks
+  reads as a rounded U-shape instead of a sharp V.
+- The x axis now ends on **today** (the window's last sample) instead of running
+  to the end of the month, which used to leave a flat line from the latest day
+  with data to the 31st. Tick labels use the `M/D` form (`10/19`) and always
+  include the window's first and last day.
 - The y axis is linear and scaled to the **largest single series**, not the daily
   total, so a busy day does not flatten every line into the bottom quarter. Days
   without usage are zero points on the baseline rather than gaps.
@@ -74,12 +101,13 @@ multi-model daily trend with a model-usage donut beside it.
   "其他模型（N）" series. Hovering a day opens a card with the date, the day's
   total and each model's share; clicking a day (or pressing Enter/Space on its
   focusable hit target) opens that day's per-model detail.
-- The view switch moved into the month-navigation row, immediately left of the
-  `‹ month ›` arrows (order: curve | calendar), so it no longer costs a separate
-  row. The choice is stored under `@uskyu/dsh-usage-stats:view:v1`; an unknown
-  stored value, disabled storage or a write failure falls back to the curve.
+- The view switch sits on the analysis header row, to the right of the range
+  switch (order: curve | calendar). The choice is stored under
+  `@uskyu/dsh-usage-stats:view:v1`; an unknown stored value, disabled storage or
+  a write failure falls back to the curve.
 - The standalone "recent 14 days" list was removed; the trend chart and the
-  donut cover the same period the calendar shows.
+  donut cover the same rolling window, while the calendar view keeps its own
+  month.
 
 ## Compatibility
 

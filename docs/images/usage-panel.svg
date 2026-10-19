@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" role="img" aria-labelledby="title desc">
   <title id="title">dsh-usage-stats token usage panel</title>
-  <desc id="desc">A sanitized vector preview of the DeepSeek Harness usage panel: today, month and all-time token totals, a default multi-model daily trend chart with a hover card, a month-scoped model-usage donut, a curve/calendar view switch inside the month row, and secret-free export links.</desc>
+  <desc id="desc">A sanitized vector preview of the DeepSeek Harness usage panel: today, month and all-time token totals, a rolling 7-day range switch driving a multi-model daily trend that ends today, a model-usage donut over the same window with two-way hover linking, a curve/calendar view switch, and secret-free export links.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#f7f9ff"/>
@@ -24,6 +24,7 @@
       .tiny { fill: #7d899d; font-size: 12px; }
       .tick { fill: #8a95a6; font-size: 9px; }
       .legend { fill: #536179; font-size: 11px; }
+      .seg { font-size: 11px; }
       .row { font-size: 12px; }
     </style>
   </defs>
@@ -72,17 +73,20 @@
   </g>
   <text x="154" y="262" class="tiny">今日缓存命中率 98.7%</text>
 
-  <!-- Month row: section title on the left, view switch immediately left of the month arrows -->
+  <!-- Analysis header: title, rolling range switch, then the view switch (no month arrows in curve view) -->
   <text x="154" y="305" class="label">每日 Token 趋势图</text>
   <g>
-    <rect x="598" y="288" width="96" height="24" rx="7" fill="#eef1f6"/>
-    <rect x="599" y="289" width="46" height="22" rx="6" fill="#ffffff" stroke="#d7dfec"/>
-    <text x="622" y="304" font-size="11" text-anchor="middle" font-weight="500">曲线</text>
-    <text x="670" y="304" font-size="11" text-anchor="middle" class="muted">日历</text>
+    <rect x="590" y="288" width="124" height="24" rx="7" fill="#eef1f6"/>
+    <rect x="591" y="289" width="58" height="22" rx="6" fill="#ffffff" stroke="#d7dfec"/>
+    <text x="620" y="304" class="seg" text-anchor="middle" font-weight="500">近 7 天</text>
+    <text x="681" y="304" class="seg muted" text-anchor="middle">近 1 个月</text>
   </g>
-  <text x="707" y="307" class="muted" font-size="20" text-anchor="middle">‹</text>
-  <text x="761" y="305" font-size="15" font-weight="700" text-anchor="middle">2026年10月</text>
-  <text x="812" y="307" class="muted" font-size="20" text-anchor="middle">›</text>
+  <g>
+    <rect x="722" y="288" width="96" height="24" rx="7" fill="#eef1f6"/>
+    <rect x="723" y="289" width="46" height="22" rx="6" fill="#ffffff" stroke="#d7dfec"/>
+    <text x="746" y="304" class="seg" text-anchor="middle" font-weight="500">曲线</text>
+    <text x="793" y="304" class="seg muted" text-anchor="middle">日历</text>
+  </g>
 
   <!-- Trend legend: one colour dot per series, long tail aggregated -->
   <g>
@@ -92,11 +96,13 @@
     <text x="404" y="336" class="legend">ark · deepseek-chat</text>
     <circle cx="158" cy="350" r="4" fill="#8b5cf6"/>
     <text x="170" y="354" class="legend">openrouter · claude-sonnet-4</text>
-    <circle cx="392" cy="350" r="4" fill="#9aa0a6"/>
-    <text x="404" y="354" class="legend">其他模型（2）</text>
+    <circle cx="392" cy="350" r="4" fill="#e8590c"/>
+    <text x="404" y="354" class="legend">zai · glm-4.6</text>
+    <circle cx="512" cy="350" r="4" fill="#9aa0a6"/>
+    <text x="524" y="354" class="legend">其他模型（1）</text>
   </g>
 
-  <!-- Trend plot: four dashed gridlines, one smooth line per series, solid baseline -->
+  <!-- Rolling 7-day plot: four dashed gridlines, one smooth line per series, solid baseline, axis ends today -->
   <g stroke="#e4e9f2" stroke-width="1" stroke-dasharray="4 4">
     <line x1="154" y1="372" x2="818" y2="372"/>
     <line x1="154" y1="410" x2="818" y2="410"/>
@@ -105,79 +111,92 @@
   </g>
   <line x1="154" y1="524" x2="818" y2="524" stroke="#cfd7e5" stroke-width="1"/>
   <g fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path stroke="#1f6feb" d="M 154 508.8 C 168.7 507.3 212.5 504.8 242 499.7 C 271.5 494.6 301.3 479.9 331 478.4 C 360.7 476.9 390.3 498.7 420 490.6 C 449.7 482.5 479.5 446.0 509 429.8 C 538.5 413.6 567.5 389.8 597 393.3 C 626.5 396.8 656.3 436.8 686 451 C 715.7 465.2 753.0 472.3 775 478.4 C 797.0 484.5 810.8 486.0 818 487.5"/>
-    <path stroke="#12a150" d="M 154 516.4 C 168.7 515.4 212.5 512.1 242 510.3 C 271.5 508.5 301.3 512.4 331 505.8 C 360.7 499.2 390.3 474.9 420 470.8 C 449.7 466.7 479.5 483.7 509 481.4 C 538.5 479.1 567.5 459.1 597 457.1 C 626.5 455.1 656.3 463.2 686 469.3 C 715.7 475.4 753.0 488.3 775 493.6 C 797.0 498.9 810.8 499.9 818 501.2"/>
-    <path stroke="#8b5cf6" d="M 154 521 C 168.7 520.0 212.5 516.4 242 514.9 C 271.5 513.4 301.3 512.8 331 511.8 C 360.7 510.8 390.3 511.3 420 508.8 C 449.7 506.3 479.5 497.1 509 496.6 C 538.5 496.1 567.5 508.8 597 505.8 C 626.5 502.8 656.3 486.0 686 478.4 C 715.7 470.8 753.0 462.2 775 460.2 C 797.0 458.2 810.8 465.2 818 466.2"/>
-    <path stroke="#9aa0a6" d="M 154 522.5 C 168.7 522.0 212.5 519.6 242 519.4 C 271.5 519.1 301.3 521.5 331 521 C 360.7 520.5 390.3 516.9 420 516.4 C 449.7 515.9 479.5 518.7 509 517.9 C 538.5 517.1 567.5 512.3 597 511.8 C 626.5 511.3 656.3 515.9 686 514.9 C 715.7 513.9 753.0 506.8 775 505.8 C 797.0 504.8 810.8 508.3 818 508.8"/>
+    <path stroke="#1f6feb" d="M 154 467 C 190.9 460.7 190.9 441.7 264.7 448 C 338.5 454.3 301.5 498.7 375.3 486 C 449.1 473.3 412.2 429.0 486 410 C 559.8 391.0 522.9 414.2 596.7 429 C 670.5 443.8 633.5 473.3 707.3 454.3 C 781.1 435.3 781.1 399.4 818 372"/>
+    <path stroke="#12a150" d="M 154 479.7 C 190.9 475.5 190.9 462.8 264.7 467 C 338.5 471.2 301.5 496.5 375.3 492.3 C 449.1 488.1 412.2 462.7 486 454.3 C 559.8 445.9 522.9 458.5 596.7 467 C 670.5 475.5 633.5 490.3 707.3 479.7 C 781.1 469.1 781.1 450.1 818 435.3"/>
+    <path stroke="#8b5cf6" d="M 154 498.7 C 190.9 494.5 190.9 483.9 264.7 486 C 338.5 488.1 301.5 507.1 375.3 505 C 449.1 502.9 412.2 486.0 486 479.7 C 559.8 473.4 522.9 481.8 596.7 486 C 670.5 490.2 633.5 500.7 707.3 492.3 C 781.1 483.9 781.1 471.2 818 460.7"/>
+    <path stroke="#e8590c" d="M 154 505 C 190.9 505.0 190.9 505.0 264.7 505 C 338.5 505.0 301.5 507.1 375.3 505 C 449.1 502.9 412.2 500.8 486 498.7 C 559.8 496.6 522.9 498.7 596.7 498.7 C 670.5 498.7 633.5 509.3 707.3 498.7 C 781.1 488.1 781.1 477.6 818 467"/>
+    <path stroke="#9aa0a6" d="M 154 517.7 C 190.9 517.7 190.9 517.7 264.7 517.7 C 338.5 517.7 301.5 519.8 375.3 517.7 C 449.1 515.6 412.2 513.4 486 511.3 C 559.8 509.2 522.9 511.3 596.7 511.3 C 670.5 511.3 633.5 513.4 707.3 511.3 C 781.1 509.2 781.1 507.1 818 505"/>
   </g>
 
-  <!-- Hover card: date, day total and the per-model split -->
+  <!-- Trend hover card: date, day total and the per-model split -->
   <g filter="url(#card)">
-    <rect x="382" y="386" width="258" height="92" rx="8" fill="#ffffff" stroke="#e2e7f0"/>
+    <rect x="214" y="376" width="244" height="124" rx="8" fill="#ffffff" stroke="#e2e7f0"/>
   </g>
-  <text x="394" y="406" font-size="11" fill="#718096">10-21 周三 · 1.0M tokens</text>
+  <text x="226" y="396" font-size="11" fill="#718096">10-15 周三 · 180K tokens</text>
   <g>
-    <circle cx="398" cy="422" r="3.5" fill="#1f6feb"/>
-    <text x="410" y="426" font-size="11" fill="#536179">deepseek-official · deepseek-chat</text>
-    <text x="628" y="426" font-size="11" font-weight="600" text-anchor="end">620K</text>
-    <circle cx="398" cy="442" r="3.5" fill="#12a150"/>
-    <text x="410" y="446" font-size="11" fill="#536179">ark · deepseek-chat</text>
-    <text x="628" y="446" font-size="11" font-weight="600" text-anchor="end">310K</text>
-    <circle cx="398" cy="462" r="3.5" fill="#8b5cf6"/>
-    <text x="410" y="466" font-size="11" fill="#536179">openrouter · claude-sonnet-4</text>
-    <text x="628" y="466" font-size="11" font-weight="600" text-anchor="end">96K</text>
+    <circle cx="230" cy="412" r="3.5" fill="#1f6feb"/>
+    <text x="242" y="416" font-size="11" fill="#536179">deepseek-official · deepseek-chat</text>
+    <text x="446" y="416" font-size="11" font-weight="600" text-anchor="end">60K</text>
+    <circle cx="230" cy="430" r="3.5" fill="#12a150"/>
+    <text x="242" y="434" font-size="11" fill="#536179">ark · deepseek-chat</text>
+    <text x="446" y="434" font-size="11" font-weight="600" text-anchor="end">50K</text>
+    <circle cx="230" cy="448" r="3.5" fill="#8b5cf6"/>
+    <text x="242" y="452" font-size="11" fill="#536179">openrouter · claude-sonnet-4</text>
+    <text x="446" y="452" font-size="11" font-weight="600" text-anchor="end">30K</text>
+    <circle cx="230" cy="466" r="3.5" fill="#e8590c"/>
+    <text x="242" y="470" font-size="11" fill="#536179">zai · glm-4.6</text>
+    <text x="446" y="470" font-size="11" font-weight="600" text-anchor="end">30K</text>
+    <circle cx="230" cy="484" r="3.5" fill="#9aa0a6"/>
+    <text x="242" y="488" font-size="11" fill="#536179">其他模型（1）</text>
+    <text x="446" y="488" font-size="11" font-weight="600" text-anchor="end">10K</text>
   </g>
 
-  <!-- Date ticks -->
+  <!-- Date ticks: M/D form, the rightmost tick is today -->
   <g class="tick">
-    <text x="154" y="546">1 日</text>
-    <text x="287" y="546" text-anchor="middle">7 日</text>
-    <text x="420" y="546" text-anchor="middle">13 日</text>
-    <text x="552" y="546" text-anchor="middle">19 日</text>
-    <text x="685" y="546" text-anchor="middle">25 日</text>
-    <text x="818" y="546" text-anchor="end">31 日</text>
+    <text x="154" y="546">10/13</text>
+    <text x="375" y="546" text-anchor="middle">10/15</text>
+    <text x="597" y="546" text-anchor="middle">10/17</text>
+    <text x="818" y="546" text-anchor="end">10/19</text>
   </g>
 
-  <!-- Model usage donut for the selected month; arcs use the exact token fractions -->
+  <!-- Model usage donut over the same window; the "ark" slice is hovered -->
   <text x="154" y="570" class="label">模型用量</text>
   <g>
-    <circle cx="218" cy="646" r="52" fill="none" stroke="#1f6feb" stroke-width="16" stroke-dasharray="153.56 326.73" stroke-dashoffset="0" transform="rotate(-90 218 646)"/>
-    <circle cx="218" cy="646" r="52" fill="none" stroke="#12a150" stroke-width="16" stroke-dasharray="84.95 326.73" stroke-dashoffset="-153.56" transform="rotate(-90 218 646)"/>
-    <circle cx="218" cy="646" r="52" fill="none" stroke="#8b5cf6" stroke-width="16" stroke-dasharray="49.01 326.73" stroke-dashoffset="-238.51" transform="rotate(-90 218 646)"/>
-    <circle cx="218" cy="646" r="52" fill="none" stroke="#e8590c" stroke-width="16" stroke-dasharray="26.14 326.73" stroke-dashoffset="-287.52" transform="rotate(-90 218 646)"/>
-    <circle cx="218" cy="646" r="52" fill="none" stroke="#9aa0a6" stroke-width="16" stroke-dasharray="13.07 326.73" stroke-dashoffset="-313.66" transform="rotate(-90 218 646)"/>
-    <text x="218" y="650" font-size="15" font-weight="600" text-anchor="middle">8.8M</text>
-    <text x="218" y="662" font-size="8" text-anchor="middle" fill="#7d899d">tokens</text>
+    <circle cx="218" cy="646" r="52" fill="none" stroke="#1f6feb" stroke-width="16" stroke-dasharray="129.33 326.73" stroke-dashoffset="0" transform="rotate(-90 218 646)"/>
+    <circle cx="218" cy="646" r="52" fill="none" stroke="#12a150" stroke-width="21" stroke-dasharray="84.4 326.73" stroke-dashoffset="-129.33" transform="rotate(-90 218 646)"/>
+    <circle cx="218" cy="646" r="52" fill="none" stroke="#8b5cf6" stroke-width="16" stroke-dasharray="55.82 326.73" stroke-dashoffset="-213.73" transform="rotate(-90 218 646)"/>
+    <circle cx="218" cy="646" r="52" fill="none" stroke="#e8590c" stroke-width="16" stroke-dasharray="40.84 326.73" stroke-dashoffset="-269.55" transform="rotate(-90 218 646)"/>
+    <circle cx="218" cy="646" r="52" fill="none" stroke="#9aa0a6" stroke-width="16" stroke-dasharray="16.34 326.73" stroke-dashoffset="-310.39" transform="rotate(-90 218 646)"/>
   </g>
+  <!-- Hover card replaces the ring centre while a slice is hovered -->
+  <g filter="url(#card)">
+    <rect x="156" y="626" width="124" height="40" rx="8" fill="#ffffff" stroke="#e2e7f0"/>
+  </g>
+  <circle cx="166" cy="637" r="3" fill="#12a150"/>
+  <text x="176" y="641" font-size="9.5" fill="#536179">ark · deepseek-chat</text>
+  <text x="222" y="658" font-size="10.5" font-weight="600" text-anchor="end">620K</text>
+  <text x="230" y="658" font-size="9.5" fill="#7d899d">26%</text>
+
   <g class="row">
     <circle cx="306" cy="592" r="4" fill="#1f6feb"/>
     <text x="318" y="596" fill="#536179">deepseek-official · deepseek-chat</text>
-    <text x="740" y="596" font-size="11" text-anchor="end" fill="#8a95a6">47%</text>
-    <text x="818" y="596" text-anchor="end">4.1M</text>
+    <text x="740" y="596" font-size="11" text-anchor="end" fill="#8a95a6">40%</text>
+    <text x="818" y="596" text-anchor="end">950K</text>
     <line x1="300" y1="608" x2="818" y2="608" stroke="#eef1f6"/>
 
+    <rect x="300" y="612" width="518" height="28" rx="5" fill="#f2f5fa"/>
     <circle cx="306" cy="622" r="4" fill="#12a150"/>
     <text x="318" y="626" fill="#536179">ark · deepseek-chat</text>
     <text x="740" y="626" font-size="11" text-anchor="end" fill="#8a95a6">26%</text>
-    <text x="818" y="626" text-anchor="end">2.3M</text>
+    <text x="818" y="626" text-anchor="end">620K</text>
     <line x1="300" y1="638" x2="818" y2="638" stroke="#eef1f6"/>
 
     <circle cx="306" cy="652" r="4" fill="#8b5cf6"/>
     <text x="318" y="656" fill="#536179">openrouter · claude-sonnet-4</text>
-    <text x="740" y="656" font-size="11" text-anchor="end" fill="#8a95a6">15%</text>
-    <text x="818" y="656" text-anchor="end">1.3M</text>
+    <text x="740" y="656" font-size="11" text-anchor="end" fill="#8a95a6">17%</text>
+    <text x="818" y="656" text-anchor="end">410K</text>
     <line x1="300" y1="668" x2="818" y2="668" stroke="#eef1f6"/>
 
     <circle cx="306" cy="682" r="4" fill="#e8590c"/>
     <text x="318" y="686" fill="#536179">zai · glm-4.6</text>
-    <text x="740" y="686" font-size="11" text-anchor="end" fill="#8a95a6">8%</text>
-    <text x="818" y="686" text-anchor="end">704K</text>
+    <text x="740" y="686" font-size="11" text-anchor="end" fill="#8a95a6">13%</text>
+    <text x="818" y="686" text-anchor="end">300K</text>
     <line x1="300" y1="698" x2="818" y2="698" stroke="#eef1f6"/>
 
     <circle cx="306" cy="712" r="4" fill="#9aa0a6"/>
-    <text x="318" y="716" fill="#536179">其他模型（3）</text>
-    <text x="740" y="716" font-size="11" text-anchor="end" fill="#8a95a6">4%</text>
-    <text x="818" y="716" text-anchor="end">352K</text>
+    <text x="318" y="716" fill="#536179">其他模型（1）</text>
+    <text x="740" y="716" font-size="11" text-anchor="end" fill="#8a95a6">5%</text>
+    <text x="818" y="716" text-anchor="end">120K</text>
   </g>
 
   <!-- Secret-free export -->
@@ -197,18 +216,18 @@
     <text x="56" y="20" text-anchor="middle" fill="#2468db" font-size="12" font-weight="750">v0.4.0</text>
     <text x="0" y="78" font-size="38" font-weight="800">一个面板，</text>
     <text x="0" y="124" font-size="38" font-weight="800">看清 Token 用量</text>
-    <text x="0" y="166" font-size="16" class="muted">每个模型一条趋势线，环心是当月总量。</text>
-    <text x="0" y="192" font-size="16" class="muted">视图切换就在月份导航里，日历随时可切回。</text>
+    <text x="0" y="166" font-size="16" class="muted">近 7 天 / 近 1 个月的滚动窗口，止于今天。</text>
+    <text x="0" y="192" font-size="16" class="muted">同一区间驱动折线与环形图，月份箭头只在日历里。</text>
 
     <g transform="translate(0 244)">
       <rect width="390" height="86" rx="18" fill="#ffffff" stroke="#dfe6f2"/>
       <rect x="18" y="18" width="50" height="50" rx="15" fill="#eaf2ff"/>
       <g fill="none" stroke="#246ff2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M28 52c7-2 10-14 15-14s8 11 14 6 8-16 15-18"/>
-        <path d="M28 58c6 0 9-6 14-6s9 8 16 4 9-12 14-13" stroke="#8fb6f8"/>
+        <path d="M28 54c5-10 8-18 13-18s8 12 13 10 9-16 14-16"/>
+        <path d="M28 60c6 0 9-6 14-6s9 8 16 4 9-10 14-12" stroke="#8fb6f8"/>
       </g>
       <text x="86" y="39" font-size="15" font-weight="750">每日趋势图</text>
-      <text x="86" y="61" font-size="13" class="muted">多模型分色折线，悬停看分项</text>
+      <text x="86" y="61" font-size="13" class="muted">多模型分色折线，横轴止于今天</text>
     </g>
     <g transform="translate(0 344)">
       <rect width="390" height="86" rx="18" fill="#ffffff" stroke="#dfe6f2"/>
@@ -218,7 +237,7 @@
         <circle cx="43" cy="43" r="14" fill="none" stroke="#7cc9a2" stroke-width="8" stroke-dasharray="34 88" stroke-dashoffset="-52"/>
       </g>
       <text x="86" y="39" font-size="15" font-weight="750">模型用量环形图</text>
-      <text x="86" y="61" font-size="13" class="muted">环心当月总量，列表看百分比</text>
+      <text x="86" y="61" font-size="13" class="muted">色块与列表行双向悬停联动</text>
     </g>
     <g transform="translate(0 444)">
       <rect width="390" height="86" rx="18" fill="#ffffff" stroke="#dfe6f2"/>

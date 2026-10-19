@@ -1,14 +1,14 @@
 # dsh-usage-stats
 
-<!-- stable-version: 0.3.5 -->
+<!-- stable-version: 0.4.0 -->
 
-[![GitHub Release](https://img.shields.io/github/v/release/Ychris12138/dsh-usage-stats?display_name=tag&sort=semver&color=1f6feb)](https://github.com/Ychris12138/dsh-usage-stats/releases/latest)
-[![CI](https://github.com/Ychris12138/dsh-usage-stats/actions/workflows/ci.yml/badge.svg)](https://github.com/Ychris12138/dsh-usage-stats/actions/workflows/ci.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/uskyu/dsh-usage-stats?display_name=tag&sort=semver&color=1f6feb)](https://github.com/uskyu/dsh-usage-stats/releases/latest)
+[![CI](https://github.com/uskyu/dsh-usage-stats/actions/workflows/ci.yml/badge.svg)](https://github.com/uskyu/dsh-usage-stats/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-2da44e)](LICENSE)
 
-为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 网页端提供多供应商账户监测与 Token 用量分析。
+为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 网页端提供 Token 用量分析：今日/本月/累计总量、缓存命中率、日历或曲线视图，以及模型级消耗排行。
 
-Provider balances, subscription quotas, and token-usage analytics for the DeepSeek Harness Web GUI (`dsh web`).
+Token-usage analytics for the DeepSeek Harness Web GUI (`dsh web`): today/month/all-time totals, cache-hit rates, a calendar or curve view, and a per-model ranking.
 
 ![dsh-usage-stats interface preview](docs/images/usage-panel.svg)
 
@@ -16,35 +16,34 @@ Provider balances, subscription quotas, and token-usage analytics for the DeepSe
 
 [![Powered by OrcaRouter](https://img.shields.io/badge/Powered_by-OrcaRouter-2563eb)](https://www.orcarouter.ai/ref/ref_13c34663d1527ac16963)
 
-> 🐋 OrcaRouter sponsors this project and is available as an optional OpenAI-compatible provider. [Learn more](https://www.orcarouter.ai/ref/ref_13c34663d1527ac16963) · Referral link.
+> 🐋 OrcaRouter sponsors this project and is available as an optional OpenAI-compatible provider. [Learn more](https://www.orcarouter.ai/ref/ref_13c34663d1527ac16963) · Referral link. OrcaRouter 仍可作为普通 provider 手动配置（`ORCAROUTER_API_KEY`、`orcarouter-balance` adapter 与 `/v1/balance`，见下文）；自 v0.4.0 起面板不再提供「加入 OrcaRouter」的赞助集成入口，服务端 preset 路由保留。
 
 ## 一眼看懂 / At a glance
 
 | | 能力 | 说明 |
 | --- | --- | --- |
-| 💳 | 统一账户卡片 | API 供应商显示余额，Token Plan 显示分窗口额度；面板一次只呈现当前供应商 |
-| 📊 | Token 用量分析 | 今日、本月、累计、缓存命中率、月历热图，以及按日期/供应商/模型下钻 |
-| 💰 | 估算费用与预算 | 按事件时间匹配历史价格，提供日/月费用、session 级聚合及可选预算预警 |
-| 🔄 | 后台监测 | 账户按 active/detail/background 自适应刷新；间隔可配置或完全关闭，本地 Token 聚合保持独立运行 |
-| 🧩 | 可扩展适配器 | 支持 New API、Sub2API、通用余额模板，以及声明式 JSON Pointer 自定义查询 |
+| 📊 | Token 用量分析 | 今日、本月、累计总量与缓存命中率；当月每日用量可在日历热图与曲线之间切换，并可下钻到某天的 `provider · model` 明细 |
+| 🏆 | 今日模型消耗 | 按 `provider · model` 列出今日 Token 排行（最多 5 行），中间为占今日总量的占比条，取代了旧的「最近会话费用」区块 |
+| 🔢 | 紧凑数字显示 | 低于 10000 显示千分位原值（`1,234`），10000 及以上缩写为最多 4 位字符加 K/M/B/T 后缀（`33.8M`、`6.2B`）；鼠标悬停显示精确值 |
+| 💰 | 估算费用与预算 | 按事件时间匹配历史价格；配置预算后显示日/月预算状态行，完整费用估算随导出提供 |
 | 📦 | 安全导出 | 提供 daily/session CSV 与版本化 JSON；Unicode、CSV 公式前缀和不完整费用均安全处理 |
-| 🔒 | 本机安全边界 | 数据端点仅接受回环 GET；OrcaRouter preset 仅由带防跨站请求头的显式回环 POST 写入；凭据只在服务端解析 |
+| 🔒 | 本机安全边界 | 数据端点仅接受回环 GET；凭据只在服务端解析；后台只做本地 Token 聚合 |
 
-界面支持中文和英文。浏览器只请求当前选择的 provider；账户自动刷新由服务端统一调度。手动刷新会更新用量、供应商列表，并强制刷新当前账户，不会批量强制请求其他供应商。
+界面支持中文和英文。浏览器只请求 `/api/usage-stats/usage` 并下载三个导出文件；侧边栏角标显示今日 Token。手动刷新只重新读取 Token 聚合，不会触发任何上游账户请求。
 
 ## 快速安装 / Quick start
 
-需要 DeepSeek Harness `web` profile（基础功能支持 `@deepseek-ai/dsh >= 0.1.0-rc.6`）。DSH Desktop 的 **DeepSeek Account 登录余额**接入依赖 DSH `0.2.0-rc.2+` 提供的 Host account service；旧版 Harness 仍继续使用 API Key 余额路径。
+需要 DeepSeek Harness `web` profile（支持 `@deepseek-ai/dsh >= 0.1.0-rc.6`）。Token 用量统计完全在本机完成，不需要任何额外凭据。
 
 稳定版优先安装 npm 上的精确版本；这也是 DSH Desktop Market 使用的同一个包：
 
 ```bash
-dsh plugin --profile web add "@ychris12138/dsh-usage-stats@0.3.5"
+dsh plugin --profile web add "@uskyu/dsh-usage-stats@0.4.0"
 ```
 
-只有测试尚未发布的 source/RC 时才使用 `dsh plugin --profile web add "github:Ychris12138/dsh-usage-stats"`。GitHub `main` 可能领先 npm stable，不应把 source 安装当作市场安装验收。
+只有测试尚未发布的 source/RC 时才使用 `dsh plugin --profile web add "github:uskyu/dsh-usage-stats"`。GitHub `main` 可能领先 npm stable，不应把 source 安装当作市场安装验收。
 
-然后重启已经运行的 `dsh web`，并在浏览器中硬刷新。侧边栏底部会出现“用量/余额”（Usage/Balance）入口。
+然后重启已经运行的 `dsh web`，并在浏览器中硬刷新。侧边栏底部会出现“用量”（Usage）入口，角标显示今日 Token。
 
 ### 插件市场 GUI 安装（DSH Community Market，Path A 标准来源）
 
@@ -53,20 +52,20 @@ dsh plugin --profile web add "@ychris12138/dsh-usage-stats@0.3.5"
 - `catalog/catalog-source.json` — 来源 manifest（`catalog-source.schema.json` v1.0.0）
 - `catalog/v1/plugins.json` — 标准 provider page（`catalog-provider-page.schema.json` v1.0.0）
 
-**使用前提（重要）**：市场托管安装只接受 npm registry 的精确稳定版本，git 条目仅可浏览。`dsh-usage-stats` 这个 npm 名已被其他项目占用，因此目录条目身份使用 `@ychris12138/dsh-usage-stats`。当前 stable/catalog 版本是 `0.3.5`；每个新版本都按以下顺序发布：
+**使用前提（重要）**：市场托管安装只接受 npm registry 的精确稳定版本，git 条目仅可浏览。裸名 `dsh-usage-stats` 已被其他项目占用，因此目录条目身份使用 `@uskyu/dsh-usage-stats`。当前 stable/catalog 版本是 `0.4.0`；每个新版本都按以下顺序发布：
 
 1. 运行 `npm run release:sync -- <version>` 同步 `package.json` / `package-lock.json` / `catalog/v1/plugins.json`，再由 `npm run check:release` 阻止身份或版本漂移。
 2. 发布 scoped 公共包：`npm publish --access public`。
-3. 把 `catalog/v1/plugins.json` 内容发布到 `https://ychris12138.github.io/dsh-usage-stats/v1/plugins`（GitHub Pages，manifest 与 endpoint 必须同源、HTTPS 443、无凭据）。
-4. 在 DSH 插件市场 → 来源管理 → 添加来源，粘贴 manifest URL：`https://ychris12138.github.io/dsh-usage-stats/catalog-source.json`，选择后即可走「可恢复安装边界」GUI 安装。
+3. 把 `catalog/v1/plugins.json` 内容发布到 `https://uskyu.github.io/dsh-usage-stats/v1/plugins`（GitHub Pages，manifest 与 endpoint 必须同源、HTTPS 443、无凭据）。
+4. 在 DSH 插件市场 → 来源管理 → 添加来源，粘贴 manifest URL：`https://uskyu.github.io/dsh-usage-stats/catalog-source.json`，选择后即可走「可恢复安装边界」GUI 安装。
 
 > 目录若先指向尚未发布的版本，市场安装会 fail-closed，这是预期行为。只有 npm、Pages catalog 与 Desktop Market 实际安装全部验证后，才算完成发布。
 
 升级或卸载：
 
 ```bash
-dsh plugin --profile web update "@ychris12138/dsh-usage-stats"
-dsh plugin --profile web remove "@ychris12138/dsh-usage-stats"
+dsh plugin --profile web update "@uskyu/dsh-usage-stats"
+dsh plugin --profile web remove "@uskyu/dsh-usage-stats"
 ```
 
 <details>
@@ -75,33 +74,37 @@ dsh plugin --profile web remove "@ychris12138/dsh-usage-stats"
 PowerShell、命令提示符和 macOS/Linux 终端使用同一条命令：
 
 ```bash
-npx --yes github:Ychris12138/dsh-usage-stats
+npx --yes github:uskyu/dsh-usage-stats
 ```
 
-安装器会把运行文件复制到 `~/.dsh/profiles/node_modules/@ychris12138/dsh-usage-stats`，并在 `profiles/web/cordis.patch.yml` 中以带引号的 scoped identity 幂等启用插件。重复运行即可更新，不会重复追加配置；旧版 `name: dsh-usage-stats` 和未加引号的 `name: @ychris12138/dsh-usage-stats` 会自动迁移。设置了 `DSH_HOME` 时使用该目录。
+安装器会把运行文件复制到 `~/.dsh/profiles/node_modules/@uskyu/dsh-usage-stats`，并在 `profiles/web/cordis.patch.yml` 中以带引号的 scoped identity 幂等启用插件。重复运行即可更新，不会重复追加配置；旧版 `name: dsh-usage-stats` 和未加引号的 `name: @uskyu/dsh-usage-stats` 会自动迁移。设置了 `DSH_HOME` 时使用该目录。
+
+> 从 0.3.x 升级：安装器只迁移上面两种旧写法。若 `cordis.patch.yml` 里仍有旧作用域包名的 entry，请先 `dsh plugin ... remove` 旧包并删除该 entry，再安装 `@uskyu/dsh-usage-stats`，否则同一插件会挂载两次。
 
 `dsh plugin` 与 `npx` 是两条独立安装路径，请选择其中一种；不要同时保留手工 Cordis entry 和 bundle 注册，否则会重复挂载。
 
 ```bash
 # 预览，不修改文件
-npx --yes github:Ychris12138/dsh-usage-stats --dry-run
+npx --yes github:uskyu/dsh-usage-stats --dry-run
 
 # 检查现有安装
-npx --yes github:Ychris12138/dsh-usage-stats --check
+npx --yes github:uskyu/dsh-usage-stats --check
 
 # 安装但不修改 Cordis patch
-npx --yes github:Ychris12138/dsh-usage-stats --no-enable
+npx --yes github:uskyu/dsh-usage-stats --no-enable
 ```
 
 无法使用 `npx` 时可从源码运行 `node scripts/install.mjs`。
 
 </details>
 
-## 支持的账户类型 / Providers
+## 服务端账户适配器（面板已不再展示）/ Server-side account adapters
 
-插件自动发现官方 DeepSeek API Key 路由、DSH 0.2 的 `deepseek-account` 路由，以及 `llm-pi-ai` 中的 provider profile。只有存在公开账户接口、Host-owned account service 或显式 monitor 的供应商才会查询账户；Token 用量统计不需要额外凭据。
+> **自 v0.4.0 起，面板不再展示任何供应商账户信息。** 客户端不再请求 `/api/usage-stats/providers`、`/api/usage-stats/account` 或 `/api/usage-stats/integrations/orcarouter`，也没有供应商下拉选择器、余额卡片、订阅配额进度条、账户健康度或 OrcaRouter 入口；后台不再向上游轮询账户。这些 HTTP 路由与下面的 adapter 仍保留在服务端，供外部 API 消费者和显式 monitor 配置使用（详见「API」一节）。
 
-> **DSH 0.2 Desktop**：`0.3.5` 已支持 Host-owned `deepseek-account` 登录余额；该路径依赖 DSH `0.2.0-rc.2+` 的 account service，不读取原始 token、Cookie 或 PKCE。旧版 Harness 与 API Key DeepSeek 仍继续使用 `/user/balance` 路径。
+插件自动发现官方 DeepSeek API Key 路由、DSH 0.2 的 `deepseek-account` 路由，以及 `llm-pi-ai` 中的 provider profile。只有存在公开账户接口、Host-owned account service 或显式 monitor 的供应商才会查询账户；Token 用量统计不需要额外凭据，也不受本节影响。
+
+> **DSH 0.2 Desktop**：Host-owned `deepseek-account` 路由依赖 DSH `0.2.0-rc.2+` 的 account service，不读取原始 token、Cookie 或 PKCE；API Key DeepSeek 使用 `/user/balance` 路径。两条路径现在都只通过服务端账户 API 访问。
 
 | Provider / adapter | 模式 | 默认凭据 | 上游接口 |
 | --- | --- | --- | --- |
@@ -121,32 +124,34 @@ npx --yes github:Ychris12138/dsh-usage-stats --no-enable
 | Sub2API 面板（真实） | 余额 | provider 推理 Token | `/user/balance`（复用 apiKey） |
 | General / Declarative | 余额或订阅 | 配置中的 credential ref | 受限 GET + JSON |
 
-没有公开账户接口的供应商仍会正常统计 Token；账户卡片会明确显示“不支持”，不会猜测余额。
+没有公开账户接口的供应商仍会正常统计 Token；账户 API 对它们返回 `unsupported` 状态，不会猜测余额。
 
-## 凭据与供应商配置 / Configuration
+## 凭据与 monitor 配置 / Configuration
 
-凭据由 Harness 从 `~/.dsh/.credentials.yaml` 解析。安装器不会读取、创建或修改该文件。不要把真实 Key、Cookie 或管理令牌提交到 Git、公开 issue，或粘贴给编码 Agent。
+凭据由 Harness 从 `~/.dsh/.credentials.yaml` 解析。安装器不会读取、创建或修改该文件。Token 用量统计本身不需要凭据；只有当你显式配置服务端账户 monitor 时，下面的引用才会被使用。不要把真实 Key、Cookie 或管理令牌提交到 Git、公开 issue，或粘贴给编码 Agent。
 
-### 账户刷新 / Account refresh
+### 后台刷新 / Background refresh
 
-默认刷新间隔是 active 1 分钟、detail 2 分钟、background 15 分钟。严格限流的 New API 或公司中转可以调整全局策略，或完全关闭账户自动刷新：
+**自 v0.4.0 起，后台定时任务只做本地 Token 聚合**（`collectUsage(..., { scanPersisted: true })`），不再按 active/detail/background 间隔轮询上游账户：`apply()` 里的账户刷新开关恒为 `false`。面板数据来自本地会话日志，不来自供应商 API，因此界面上没有可调整的账户刷新间隔。
+
+以下键仍然被配置校验接受，避免旧配置启动失败；它们现在只作用于服务端账户 API，不再改变面板行为：
 
 ```yaml
 # ~/.dsh/profiles/web/cordis.patch.yml
 - insert:
     - id: usage-stats
-      name: "@ychris12138/dsh-usage-stats"
+      name: "@uskyu/dsh-usage-stats"
       config:
         refresh:
-          enabled: false
-          activeMs: 60000
+          enabled: false        # 已废弃：面板不再请求账户，因此没有可见效果
+          activeMs: 60000       # 仍决定服务端账户缓存的到期判断
           detailMs: 120000
           backgroundMs: 900000
+        disableBackgroundRefresh: true  # 已废弃，保留以便旧配置启动
 ```
 
-三个间隔必须是 `60000` 至 `86400000` 毫秒之间的整数。需要停止时使用 `refresh.enabled: false`，不要填写超大的 timeout。关闭后，每个相同 provider 配置仍允许首次查询；之后普通面板读取只返回缓存，不会因缓存过期访问上游。账户端点的 `refresh=1`（Retry）仍可显式刷新，provider/monitor 配置变化后也会为新配置重新查询一次。
-
-旧配置 `disableBackgroundRefresh: true` 继续等价于 `refresh.enabled: false`；两者同时存在时，显式的 `refresh.enabled` 优先。该开关只关闭账户上游自动刷新，不会关闭本地 Token 用量聚合。
+- `refresh.enabled: false`：服务端账户 API 关闭上游自动刷新，只返回缓存快照；`refresh=1` 仍可显式强制刷新。面板不请求这些端点，所以看不到差异。旧写法 `disableBackgroundRefresh: true` 继续被接受，两者同时存在时显式的 `refresh.enabled` 优先。
+- `activeMs` / `detailMs` / `backgroundMs`：仍必须是 `60000` 至 `86400000` 毫秒之间的整数，仍参与账户缓存的到期判断，但已没有任何后台调度读取它们。
 
 ### 估算费用与预算 / Estimated cost and budgets
 
@@ -156,7 +161,7 @@ npx --yes github:Ychris12138/dsh-usage-stats --no-enable
 # ~/.dsh/profiles/web/cordis.patch.yml
 - insert:
     - id: usage-stats
-      name: "@ychris12138/dsh-usage-stats"
+      name: "@uskyu/dsh-usage-stats"
       config:
         budgets:
           currency: USD
@@ -164,19 +169,9 @@ npx --yes github:Ychris12138/dsh-usage-stats --no-enable
           monthly: 100
 ```
 
-预算使用本机日历日/月边界：低于 80% 为正常，达到 80% 为 warning，达到 100% 为 critical。`daily` / `monthly` 必须是正数或 `null`；当前版本不做 FX 换算，因此预算货币与可靠价格货币不兼容时状态保持 unknown。
+预算使用本机日历日/月边界：低于 80% 为正常，达到 80% 为 warning，达到 100% 为 critical。`daily` / `monthly` 必须是正数或 `null`；当前版本不做 FX 换算，因此预算货币与可靠价格货币不兼容时状态保持 unknown。预算状态显示在面板顶部三张 Token 卡片下方。
 
-面板的当前 provider 会保存在浏览器的命名空间 localStorage 中；刷新页面或重启 DSH 后恢复。若该 provider 已被删除，插件会清除旧值；DSH 0.2 Desktop 已登录时优先选择 `deepseek-account`，否则回退到已配置的 `deepseek-official` / 其他 provider。用户已有的有效选择始终优先，不会被自动切换。该选择不会写入 DSH 设置、服务端缓存或新 API。
-
-### DSH Desktop DeepSeek Account（DSH 0.2）
-
-DSH 0.2 将浏览器登录的 DeepSeek Account 与 `deepseek-official` API Key 路由分开。插件通过 Host 的可选 `deepseekAccount` service 读取**客户端安全的登录状态和余额结果**，不会读取或复制账号 token、Cookie、PKCE 数据，也不会把它们发送到浏览器。
-
-- `deepseek-official`：继续使用 `DEEPSEEK_API_KEY` / `/user/balance`，兼容旧 Harness；
-- `deepseek-account`：使用 Desktop/Settings 已保存的账号 grant，通过官方 Host service 查询；
-- 充值余额与赠送余额按币种合并；CNY 与 USD 同时存在时**分别显示，绝不跨币种相加**；
-- Host Account 不参加后台账户轮询。只有带真实 UI 版本/语言/时区 metadata 的面板读取才会查询余额；退出或切换账号后，下一次 UI 读取不会继续复用旧余额；
-- 未登录显示“未登录 DeepSeek Account”，不会误提示用户配置 `DEEPSEEK_API_KEY`。
+面板不再有“当前供应商”选择器：旧版本保存在浏览器里的 provider 选择不再被读取，也不会显示在界面上。唯一由浏览器持久化的是视图偏好（日历或曲线），保存在 `localStorage` 的 `@uskyu/dsh-usage-stats:view:v1` 键下；存储被禁用或写入失败时回退到日历视图，不会写入 DSH 设置或服务端。
 
 ### 余额型供应商
 
@@ -187,16 +182,16 @@ DeepSeek API Key、Moonshot 等默认复用对应 provider profile 的 `apiKeyEn
 DEEPSEEK_API_KEY: sk-your-key-here
 ```
 
-OpenRouter 是明确的例外：官方账户 credits 接口要求 **Management Key**，不能复用普通推理 `OPENROUTER_API_KEY`。插件默认读取独立引用；未配置时显示“未配置”，不会拿推理 Key 试探：
+OpenRouter 是明确的例外：官方账户 credits 接口要求 **Management Key**，不能复用普通推理 `OPENROUTER_API_KEY`。插件默认读取独立引用；未配置时账户 API 返回「未配置」状态，不会拿推理 Key 试探：
 
 ```yaml
 # ~/.dsh/.credentials.yaml
 OPENROUTER_MANAGEMENT_KEY: sk-or-v1-your-management-key
 ```
 
-插件按 `total_credits - total_usage` 显示 OpenRouter 余额，并同时展示累计已用和总 credits。普通 Key 的 `/api/v1/key` 只描述单个 Key 的 spending limit，不会被当作账户余额。自定义引用可在 `monitors.openrouter` 中设置 `adapter: openrouter-balance` 与 `credentialRef`。
+插件按 `total_credits - total_usage` 计算 OpenRouter 余额，并同时给出累计已用和总 credits。普通 Key 的 `/api/v1/key` 只描述单个 Key 的 spending limit，不会被当作账户余额。自定义引用可在 `monitors.openrouter` 中设置 `adapter: openrouter-balance` 与 `credentialRef`。
 
-OrcaRouter 优先读取其余额接口 `/v1/balance`，将 paid、free 和 promo credits 汇总为当前可用余额；旧部署没有该接口时，回退到官方文档提供的 OpenAI-compatible 账单摘要接口（订阅端点总额度 + usage 端点累计用量，按美分换算）。任一可用路径返回无法识别的数据时会显示明确的错误状态，不会把未知结果当作 0；无限额度哨兵值会显示为 `∞`，OrcaRouter 路由仍不参与本插件的模型价格估算。
+OrcaRouter 优先读取其余额接口 `/v1/balance`，将 paid、free 和 promo credits 汇总为当前可用余额；旧部署没有该接口时，回退到官方文档提供的 OpenAI-compatible 账单摘要接口（订阅端点总额度 + usage 端点累计用量，按美分换算）。任一可用路径返回无法识别的数据时会返回明确的错误状态，不会把未知结果当作 0；无限额度哨兵值会显示为 `∞`，OrcaRouter 路由仍不参与本插件的模型价格估算。OrcaRouter 的 preset 写入路由（`/api/usage-stats/integrations/orcarouter`）仍然存在，但面板自 v0.4.0 起不再提供入口。
 
 ### Token Plan 供应商
 
@@ -216,7 +211,7 @@ COMMANDCODE_API_KEY: user-your-command-code-key
 
 OpenCode Go 依次尝试 Harness credential、`~/.local/share/opencode/auth.json`，最后才使用显式 `OPENCODE_GO_AUTH_COOKIE + OPENCODE_GO_WORKSPACE_ID` 兼容回退。Bearer usage endpoint 目前不是公开 API，可能随上游变化；Cookie 等同登录凭据，不应进入日志或 issue。
 
-Ollama 云读取 `OLLAMA_API_KEY`，调用 `/api/usage` 展示两个订阅窗口（5 小时会话 + 每周），无余额；`usage` 按 0..1 比例换算为进度条。
+Ollama 云读取 `OLLAMA_API_KEY`，调用 `/api/usage` 取两个订阅窗口（5 小时会话 + 每周），无余额；`usage` 按 0..1 比例换算为已用比例。
 
 Ollama 适配器只对**已配置的 provider** 生效，不会自动添加账户：当 provider 的 id 为 `ollama`，或其 baseURL 主机为 `ollama.com`（含子域）时自动选用；本地 Ollama（`localhost:11434`）不会被当作云配额账户。特殊代理/自定义端点可用显式 monitor 绑定：
 
@@ -224,7 +219,7 @@ Ollama 适配器只对**已配置的 provider** 生效，不会自动添加账�
 # ~/.dsh/profiles/web/cordis.patch.yml
 - insert:
     - id: usage-stats
-      name: dsh-usage-stats
+      name: "@uskyu/dsh-usage-stats"
       config:
         monitors:
           relay-ollama:            # 你配置的 provider id
@@ -233,7 +228,7 @@ Ollama 适配器只对**已配置的 provider** 生效，不会自动添加账�
             credentialRef: OLLAMA_API_KEY   # 非已配置 provider 时必填
 ```
 
-**Command Code（Go / GOAT / Pro / Max）——实验性适配器。** 它读取 `COMMANDCODE_API_KEY`，调用的是 Command Code 自己 CLI 使用的一组**未公开、未版本化**端点（不属于其公开 Provider API）：`/alpha/billing/credits` 给出 credits 与 5 小时/每周窗口，`/alpha/usage/summary` 给出本期请求数与花费，`/alpha/billing/subscriptions` 给出档位（Go / GOAT / Pro / Max）与计费周期。上游随时可以改动或收紧这些端点，届时卡片会退化为「响应异常」，不会影响 Token 统计本身。卡片因此显示**三条窗口**——5 小时、每周、每月（每月的重置时间就是订阅周期结束时间）——外加一行 credits 美元余额，这是本插件里唯一一张余额与订阅窗口并存的卡片。
+**Command Code（Go / GOAT / Pro / Max）——实验性适配器。** 它读取 `COMMANDCODE_API_KEY`，调用的是 Command Code 自己 CLI 使用的一组**未公开、未版本化**端点（不属于其公开 Provider API）：`/alpha/billing/credits` 给出 credits 与 5 小时/每周窗口，`/alpha/usage/summary` 给出本期请求数与花费，`/alpha/billing/subscriptions` 给出档位（Go / GOAT / Pro / Max）与计费周期。上游随时可以改动或收紧这些端点，届时账户快照会退化为「响应异常」，不会影响 Token 统计本身。该适配器因此返回**三条窗口**——5 小时、每周、每月（每月的重置时间就是订阅周期结束时间）——外加一行 credits 美元余额，是本插件里唯一同时返回余额与订阅窗口的适配器。
 
 三条窗口的口径：5 小时与每周按上游直接给出的「已用金额 ÷ 上限」换算；月度池只用它**自己那一对**数字——`credits.monthlyCredits`（月度池剩余）与 `/alpha/usage/summary` 的 `totalMonthlyCredits`（本期从月度池花掉的部分）——作为分母的两半（推导值）。充值 `purchasedCredits` 与赠送 `freeCredits` 是**另外两个池**：它们只出现在余额行与 breakdown 里，不进月度窗口的分母；聚合的 `totalCredits` 同样不进，若 `totalMonthlyCredits` 缺失就干脆不画月度窗口，而不是拿聚合值凑一个分母。
 
@@ -252,13 +247,13 @@ Provider 识别：id 为 `commandcode`、`commandcode-goat-autosync` 等 `comman
 
 需要说明的依赖关系：本适配器不 import 任何 provider 插件，额度数据也直接取自 `api.commandcode.ai`，但它沿用 **Command Code provider 插件发布的 route id 约定与默认凭据名**（`commandcode*` / `COMMANDCODE_API_KEY`）——与本插件对 Z.ai、Kimi、MiniMax、Ollama、OpenRouter 的默认凭据名做法一致。换用别的 provider 插件、或改了那个环境变量名时，写一行 `monitors.<id>.credentialRef` 覆盖即可，不需要改代码。
 
-与 OpenCode Go、Z.ai 一样，没有任何 Command Code 路由的安装也会看到一张「未配置」的占位卡片；Command Code 是转售上游模型，它的路由不参与本插件的模型价格估算。
+与 OpenCode Go、Z.ai 一样，没有配置任何 Command Code 路由时，账户 API 对这些 id 返回「未配置」状态而不是发请求；Command Code 是转售上游模型，它的路由不参与本插件的模型价格估算。
 
 Z.ai 全球区使用 `api.z.ai`，中国区使用 `open.bigmodel.cn`。MiniMax 优先使用官方 `www.minimax.io` / `www.minimaxi.com` Token Plan 地址，并解析 5 小时与周窗口的剩余比例和重置时间。
 
 ### New API、Sub2API 与自定义 monitor
 
-在现有 `name: "@ychris12138/dsh-usage-stats"` Cordis entry 下合并 `config`，不要追加第二个插件 entry。monitor 键必须是 Harness 中真实存在的 provider id；未知 provider、adapter 或非法映射会在路由和 timer 注册前阻止插件启动。例外：monitor 同时显式提供 `usageBaseURL` 与 `credentialRef` 时视为自包含，会在 provider 注册可见前临时物化为 provider（适用于 Harness 设置页里后加载的 provider），此时不要求该 provider 已出现在注册表中。
+在现有 `name: "@uskyu/dsh-usage-stats"` Cordis entry 下合并 `config`，不要追加第二个插件 entry。monitor 键必须是 Harness 中真实存在的 provider id；未知 provider、adapter 或非法映射会在路由和 timer 注册前阻止插件启动。例外：monitor 同时显式提供 `usageBaseURL` 与 `credentialRef` 时视为自包含，会在 provider 注册可见前临时物化为 provider（适用于 Harness 设置页里后加载的 provider），此时不要求该 provider 已出现在注册表中。
 
 <details>
 <summary><strong>展开 monitor 配置示例</strong></summary>
@@ -269,7 +264,7 @@ New API 默认用 provider 推理 Token 查询 `/api/usage/token/`，并从 `/ap
 # ~/.dsh/profiles/web/cordis.patch.yml
 - insert:
     - id: usage-stats
-      name: "@ychris12138/dsh-usage-stats"
+      name: "@uskyu/dsh-usage-stats"
       config:
         monitors:
           relay-a:                 # Harness provider id
@@ -312,7 +307,7 @@ Sub2API 风格 `/v1/usage`：
             adapter: sub2api-auth
 ```
 
-（可选）若 `/user/balance` 返回 UTF-8 金额对应 `body.unit`，会显示该币种；否则默认 USD。今日已用额度尽量从 `GET /api/v1/usage/stats?period=today` 的 `total_actual_cost` 补充，查询不到也不影响余额展示。
+（可选）若 `/user/balance` 返回 UTF-8 金额对应 `body.unit`，会按该币种返回；否则默认 USD。今日已用额度尽量从 `GET /api/v1/usage/stats?period=today` 的 `total_actual_cost` 补充，查询不到也不影响余额结果。
 
 **自动识别真实 Sub2API 面板（`sub2api-auth`）**：只要把 Sub2API 面板作为普通 provider 配置进 DSH（带入它的 API Key），插件会探测该 provider 的 `GET /api/v1/settings/public`。若指纹命中真实 Sub2API 面板（返回 `data.affiliate_enabled: boolean`），就自动按 `sub2api-auth` 用该 provider 的 API Key 读取余额，**无需为该 provider 单独写 `adapter`，也无需额外凭据**。显式 `adapter` 始终优先于自动识别；没有配置 API Key 的 provider 绝不会被探测。
 
@@ -321,7 +316,7 @@ Sub2API 风格 `/v1/usage`：
 # DSH 模型页里为 Sub2API 面板配置 provider，baseURL 指向面板，API Key 填可用的密钥
 ```
 
-Passion（provider id 为 `passion` 或域名为 `*.passionapi.com`）会自动识别。钱包响应显示余额；`quota_limited` 或包含 `subscription` 的响应自动切换为额度窗口。
+Passion（provider id 为 `passion` 或域名为 `*.passionapi.com`）会自动识别。钱包响应按余额返回；`quota_limited` 或包含 `subscription` 的响应自动切换为额度窗口。
 
 声明式自定义查询只支持受限 GET + JSON Pointer，不执行 JavaScript：
 
@@ -347,15 +342,18 @@ Passion（provider id 为 `passion` 或域名为 `*.passionapi.com`）会自动�
 
 支持的 adapter：`deepseek-balance`、`deepseek-account`、`openrouter-balance`、`moonshot-balance`、`zai-balance`、`orcarouter-balance`、`opencode-go`、`commandcode-goat`、`zai-token-plan`、`kimi-token-plan`、`minimax-token-plan`、`ollama`、`new-api`、`sub2api`、`sub2api-auth`、`general`、`declarative`。
 
-`warning.warnBelow` 与 `warning.criticalBelow` 是余额绝对值阈值。具有总额度的余额和 Token Plan 会自动产生 `normal / warning / critical` 剩余比例状态（默认 30% / 10%）。
+`warning.warnBelow` 与 `warning.criticalBelow` 是余额绝对值阈值。具有总额度的余额和 Token Plan 会自动产生 `normal / warning / critical` 剩余比例状态（默认 30% / 10%）。这些状态只出现在服务端账户 API 的响应里。
 
 ## 使用 / Usage
 
-1. 点击侧边栏“用量/余额”。
-2. 用“当前供应商”切换账户卡片；一次只显示一个 provider。
-3. 使用 `‹` / `›` 切换月份，点击热图日期查看当天的 provider/model 明细。
-4. “最近会话费用”只显示 `costComplete=true` 的完整估算；未知价格或混合币种会话不会展示误导性的部分金额，完整 session 数据仍可通过 CSV/JSON 导出。
-5. 标题栏刷新会更新 Token、provider 列表，并强制刷新当前账户。
+1. 点击侧边栏“用量”；角标显示今日 Token。
+2. 顶部三张卡片显示今日、本月、累计 Token，缓存命中率显示在卡片下方。低于 10000 的数字显示千分位原值，10000 及以上缩写为最多 4 位字符加 K/M/B/T 后缀（如 `33.8M`、`6.2B`）；鼠标悬停在数字上可看到精确值。
+3. 在“当月每日用量”标题下方用「日历 / 曲线」分段按钮切换视图：日历是默认的蓝色热图，曲线是平滑折线 + 渐变面积图，纵轴按平方根缩放以免单日峰值压平其余日期；两边的日期选择保持一致。
+4. 使用 `‹` / `›` 切换月份，`回到今天` 返回当月；点击热图格子、曲线上的日期或“最近 14 天”的某一行，打开当天的 provider/model 明细。
+5. “今日模型消耗”按 `provider · model` 列出今天 Token 最多的 5 行：左侧是模型标签，中间是占今日总量的占比条，右侧是缩写后的 Token（悬停显示精确值）。今天没有用量时显示空状态提示。
+6. 标题栏刷新只重新读取 Token 用量聚合；面板不会发起任何账户或上游请求。
+
+视图偏好保存在浏览器 `localStorage` 的 `@uskyu/dsh-usage-stats:view:v1` 键下，刷新页面或重启 DSH 后恢复；隐私模式或禁用存储时回退到日历视图。旧的“最近会话费用”区块已移除，会话级费用仍随 CSV/JSON 导出提供。
 
 ### 安全导出 / Secret-free export
 
@@ -376,7 +374,7 @@ CSV 使用 UTF-8、RFC 4180 引号与 spreadsheet formula 防护；Unicode 标�
 
 ```text
 Install or update dsh-usage-stats from:
-https://github.com/Ychris12138/dsh-usage-stats
+https://github.com/uskyu/dsh-usage-stats
 
 Constraints:
 - Resolve DSH_HOME from the environment; otherwise use ~/.dsh.
@@ -386,15 +384,16 @@ Constraints:
 
 Procedure:
 1. Confirm node, npx, and dsh are available.
-2. Prefer the exact npm stable used by Desktop Market: `dsh plugin --profile web add "@ychris12138/dsh-usage-stats@0.3.5"` (or update the existing scoped package).
-3. Use `github:Ychris12138/dsh-usage-stats` only when I explicitly ask to test unreleased source/RC code.
-4. If dsh plugin is unavailable, use the compatible source installer only with my approval: `npx --yes github:Ychris12138/dsh-usage-stats`.
+2. Prefer the exact npm stable used by Desktop Market: `dsh plugin --profile web add "@uskyu/dsh-usage-stats@0.4.0"` (or update the existing scoped package).
+3. Use `github:uskyu/dsh-usage-stats` only when I explicitly ask to test unreleased source/RC code.
+4. If dsh plugin is unavailable, use the compatible source installer only with my approval: `npx --yes github:uskyu/dsh-usage-stats`.
 5. Do not combine bundle installation with an existing manual dsh-usage-stats Cordis entry.
 6. For npx, require a verified package and exactly one Cordis entry, then run again with --check.
 7. Report the exact package identity/version, installation path, and resolved profile paths.
 8. If dsh web is running, report that a restart is needed and stop.
 
-Optional account setup (never handle secret values yourself):
+Optional server-side account API setup (the panel no longer shows account or balance
+data since v0.4.0; only configure this if I explicitly ask for the HTTP routes):
 - OpenRouter account balance requires OPENROUTER_MANAGEMENT_KEY, not the inference key.
 - OpenCode Go may reuse local auth.json or use OPENCODE_GO_API_KEY.
 - Z.ai uses ZAI_API_KEY; China accounts may set ZAI_API_REGION=bigmodel-cn.
@@ -412,7 +411,7 @@ Optional monitor setup:
 只获准检查而不能修改时运行：
 
 ```bash
-npx --yes github:Ychris12138/dsh-usage-stats --check
+npx --yes github:uskyu/dsh-usage-stats --check
 ```
 
 安装器退出码：未知参数返回 `2`；文件、版本或配置验证失败返回非零；成功时输出已验证版本、安装目录和 patch 路径。Agent 无需自行解析或重写 YAML。
@@ -426,7 +425,7 @@ npx --yes github:Ychris12138/dsh-usage-stats --check
 - 自定义 monitor 默认要求 HTTPS、同源相对路径、手动 redirect 和 JSON 响应，body 上限为 1 MiB。
 - 发凭据前会筛选域名的 IPv4/IPv6 解析结果并固定一个允许的连接地址，优先使用公网地址；HTTPS 域名解析到 `198.18.0.0/15` 时可作为 Clash/Mihomo 等代理的 synthetic fake-IP 使用。字面量 `198.18/15`、其他私网/特殊地址仍默认拒绝，防止 DNS rebinding 绕过私网限制。
 - `usageBaseURL` 禁止内嵌 username/password；`Authorization`、`X-API-Key`、`API-Key` 等 header 必须由 credential ref 注入。
-- 九个数据端点仅接受 GET；OrcaRouter 集成路由的 GET 只返回布尔状态，POST 仅在用户点击后执行局部 settings mutation，并要求非简单自定义 action header。所有路由同时校验 peer socket 与 Host，支持 IPv4、IPv4-mapped IPv6 和 `[::1]:port`。
+- 九个数据端点仅接受 GET；OrcaRouter 集成路由的 GET 只返回布尔状态，POST 仅在显式调用时执行局部 settings mutation，并要求非简单自定义 action header（面板自 v0.4.0 起不再提供该入口）。所有路由同时校验 peer socket 与 Host，支持 IPv4、IPv4-mapped IPv6 和 `[::1]:port`。
 - 用量缓存 `~/.dsh/storages/usage-stats-cache.json` 只保存聚合 Token、会话 id、不透明 revision 与折叠游标，不保存提示词、回复或文件路径。
 
 本机反向代理会让插件看到代理自身的回环地址。请勿把端点经反向代理暴露到局域网或公网；确需代理时必须在代理层增加可靠认证与访问控制。安全问题请按 [SECURITY.md](SECURITY.md) 私下报告。
@@ -462,7 +461,9 @@ Token 统计值来自 `assistant/chunk` 或 `assistant/message` 中 provider-rep
 | `GET` | `/api/usage-stats/export/sessions.csv` | secret-free session CSV |
 | `GET` | `/api/usage-stats/export.json` | versioned usage、budget、pricing provenance 与 account-safe JSON |
 | `GET` | `/api/usage-stats/integrations/orcarouter` | 仅返回 OrcaRouter preset 是否可写/已存在的 secret-free 布尔状态 |
-| `POST` | `/api/usage-stats/integrations/orcarouter` | 用户明确请求后，以 revision-guarded path mutation 幂等加入 preset；要求 `application/json` 与 `X-DSH-Usage-Stats-Action: add-orcarouter` |
+| `POST` | `/api/usage-stats/integrations/orcarouter` | 显式请求后，以 revision-guarded path mutation 幂等加入 preset；要求 `application/json` 与 `X-DSH-Usage-Stats-Action: add-orcarouter` |
+
+> **面板只使用 `/api/usage-stats/usage` 与三个导出端点。** `providers`、`account`、`balance`、`subscriptions`、`integrations/orcarouter` 以及 `session-context` 自 v0.4.0 起不再被客户端调用，但为对外 API 兼容而保留在服务端，语义与 v0.3.5 相同；`refresh=1` 与 OrcaRouter preset 写入仍可按表中的方式显式调用。
 
 除上述 OrcaRouter POST 外，非 GET 返回 `405`；非回环请求返回 `403`。API JSON 使用 `Cache-Control: no-cache`；下载响应使用 `Cache-Control: no-store` 与固定文件名。
 
@@ -486,7 +487,7 @@ node scripts/check-balance.mjs
 
 ## 兼容性与致谢 / Compatibility & credits
 
-当前 npm stable 为 `0.3.5`；`v0.3.5` 的完整发布门禁见 [`docs/release-checklist.md`](docs/release-checklist.md)，变更摘要见 [`docs/release-notes-v0.3.5.md`](docs/release-notes-v0.3.5.md)。DSH `0.2.0-rc.2+` 的 `deepseek-account` Host service 已完成真实 Desktop 登录/退出/重新登录验收；旧版 Harness 的 API Key 路径继续保持兼容。插件依赖 Harness 客户端模块加载器、Cordis 服务与 session persistence；Harness 预发布接口变化时可能需要同步适配。
+当前 npm stable 为 `0.4.0`；`v0.4.0` 的发布门禁见 [`docs/release-checklist.md`](docs/release-checklist.md)，变更摘要见 [`docs/release-notes-v0.4.0.md`](docs/release-notes-v0.4.0.md)，历史 `v0.3.x` 说明仍保留在 `docs/release-notes-v0.3.*.md`。v0.4.0 移除了面板的供应商账户区块（服务端路由与 adapter 保留），后台刷新改为只做本地 Token 聚合。DSH `0.2.0-rc.2+` 的 `deepseek-account` Host service 仍可在服务端账户 API 上使用；旧版 Harness 的 API Key 路径继续保持兼容。插件依赖 Harness 客户端模块加载器、Cordis 服务与 session persistence；Harness 预发布接口变化时可能需要同步适配。
 
 持久化与活跃会话的读取按**能力探测**分支，不按版本号判断，因此 `>= 0.1.0-rc.6` 的支持范围未变：`0.1.3-alpha.1`–`0.1.5-rc.2` 用 `list()` 快照 + `open(id, "read")` 读句柄，`0.1.0-rc.7`–`0.1.2-rc.1` 用 `listSnapshots()` + `readFrom()`；活跃会话同时支持 `seq`/`snapshotEvents()` 与旧版 `events` 数组。`session/disposed` 在该范围内均存在（缺少它时已结束会话改由后台全量扫描补读）。缓存格式仍为 `version: 5`，旧缓存直接复用并原地重折叠。
 
@@ -495,9 +496,9 @@ node scripts/check-balance.mjs
 - [Javis603/token-monitor](https://github.com/Javis603/token-monitor)：参考多 provider 配额归一化与 Z.ai 限额解析。
 - [xiaoqi20/dsh-opencode-go-usage](https://github.com/xiaoqi20/dsh-opencode-go-usage)：参考 DSH 凭据接入、OpenCode `auth.json` 回退与 Bearer usage endpoint。
 - [Plocr/dsh-commandcode-goat](https://github.com/Plocr/dsh-commandcode-goat)：参考 Command Code 官方 CLI 的 `/alpha/*` 账户端点、档位命名与 credits 口径。
-- [#121](https://github.com/Ychris12138/dsh-usage-stats/pull/121)（@hanxucn）：Command Code 适配器与三条窗口的归一化实现主要取自该 PR（作者已关闭未合并），本 PR 在其基础上按维护者 review 意见补上可配置客户端版本、README 契约说明，并修掉 provider 插件注册 route 不带 `apiKeyEnv` 导致的一律「未配置」。
+- PR #121（@hanxucn）：Command Code 适配器与三条窗口的归一化实现主要取自该 PR（作者已关闭未合并），本 PR 在其基础上按维护者 review 意见补上可配置客户端版本、README 契约说明，并修掉 provider 插件注册 route 不带 `apiKeyEnv` 导致的一律「未配置」。
 
-本项目重新实现统一 account protocol、adapter 与单供应商 UI，不复制参考项目界面。
+本项目重新实现统一 account protocol 与 adapter；v0.4.0 起面板只呈现 Token 用量，不再包含供应商账户界面。
 
 ## License
 

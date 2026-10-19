@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" role="img" aria-labelledby="title desc">
-  <title id="title">dsh-usage-stats provider account and token usage panel</title>
-  <desc id="desc">A sanitized vector preview of the DeepSeek Harness usage panel showing a provider balance, token totals, a monthly heatmap, and recent usage.</desc>
+  <title id="title">dsh-usage-stats token usage panel</title>
+  <desc id="desc">A sanitized vector preview of the DeepSeek Harness usage panel: today, month and all-time token totals, a monthly calendar heatmap with a calendar/curve view toggle, a today-by-model ranking, and secret-free export links.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#f7f9ff"/>
@@ -11,20 +11,8 @@
       <stop offset="0" stop-color="#ffffff"/>
       <stop offset="1" stop-color="#fbfcff"/>
     </linearGradient>
-    <linearGradient id="account" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#edf4ff"/>
-      <stop offset="0.55" stop-color="#f8fbff"/>
-      <stop offset="1" stop-color="#ffffff"/>
-    </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#2368f2"/>
-      <stop offset="1" stop-color="#4a8cff"/>
-    </linearGradient>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
       <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#20355d" flood-opacity="0.14"/>
-    </filter>
-    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="7" stdDeviation="12" flood-color="#2b4d88" flood-opacity="0.10"/>
     </filter>
     <style>
       text { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; fill: #172033; }
@@ -33,6 +21,7 @@
       .tiny { fill: #7d899d; font-size: 12px; }
       .day { fill: #5d687b; font-size: 11px; font-weight: 600; text-anchor: middle; dominant-baseline: middle; }
       .day-light { fill: #ffffff; }
+      .row { font-size: 12px; }
     </style>
   </defs>
 
@@ -64,108 +53,141 @@
   <path d="M126 90h720v24H126Z" fill="#ffffff"/>
   <line x1="126" y1="114" x2="846" y2="114" stroke="#e9edf4"/>
   <g transform="translate(154 66)" fill="none" stroke="#1e293b" stroke-width="2"><ellipse cx="10" cy="5" rx="8" ry="4"/><path d="M2 5v13c0 2 4 4 8 4s8-2 8-4V5M2 11c0 2 4 4 8 4s8-2 8-4"/><circle cx="19" cy="18" r="5" fill="#fff"/><path d="M19 15v6M16 18h6"/></g>
-  <text x="190" y="84" font-size="19" font-weight="700">用量与余额</text>
+  <text x="190" y="84" font-size="19" font-weight="700">用量</text>
   <text x="754" y="84" font-size="22" class="muted">↻</text>
   <path d="M807 73l12 12M819 73l-12 12" stroke="#8490a3" stroke-width="2" stroke-linecap="round"/>
 
-  <text x="154" y="144" class="label">供应商账户</text>
-  <text x="154" y="172" class="tiny">当前供应商</text>
-  <rect x="274" y="152" width="544" height="34" rx="10" fill="#ffffff" stroke="#dce3ee"/>
-  <text x="290" y="174" font-size="13" font-weight="600">DeepSeek</text>
-  <path d="M791 166l5 5 5-5" fill="none" stroke="#718096" stroke-width="1.5"/>
-
-  <g filter="url(#soft)">
-    <rect x="154" y="202" width="664" height="128" rx="18" fill="url(#account)" stroke="#dbe6f7"/>
-  </g>
-  <rect x="176" y="222" width="42" height="42" rx="12" fill="url(#accent)"/>
-  <text x="197" y="248" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="800">DS</text>
-  <text x="232" y="238" font-size="16" font-weight="700">DeepSeek</text>
-  <text x="232" y="258" class="tiny">API 余额</text>
-  <rect x="735" y="220" width="60" height="24" rx="12" fill="#e7f8ef"/>
-  <circle cx="748" cy="232" r="4" fill="#20b26b"/>
-  <text x="758" y="236" fill="#16844f" font-size="11" font-weight="700">实时</text>
-  <text x="176" y="298" font-size="26" font-weight="760">¥36.44</text>
-  <text x="176" y="317" class="tiny">可用余额</text>
-  <text x="602" y="284" class="tiny">已用</text>
-  <text x="602" y="306" font-size="14" font-weight="650">¥12.80</text>
-  <text x="700" y="284" class="tiny">总额</text>
-  <text x="700" y="306" font-size="14" font-weight="650">¥49.24</text>
-
-  <text x="154" y="365" class="label">Token 用量</text>
+  <!-- Token totals: today / month / all time, abbreviated above 10,000 -->
+  <text x="154" y="150" class="label">Token 用量</text>
   <g>
-    <rect x="154" y="382" width="204" height="76" rx="15" fill="#ffffff" stroke="#e2e7f0"/>
-    <text x="172" y="416" font-size="21" font-weight="750">1,234,567</text><text x="172" y="440" class="tiny">今日</text>
-    <rect x="370" y="382" width="204" height="76" rx="15" fill="#ffffff" stroke="#e2e7f0"/>
-    <text x="388" y="416" font-size="21" font-weight="750">8,765,432</text><text x="388" y="440" class="tiny">本月</text>
-    <rect x="586" y="382" width="232" height="76" rx="15" fill="#ffffff" stroke="#e2e7f0"/>
-    <text x="604" y="416" font-size="21" font-weight="750">42,000,000</text><text x="604" y="440" class="tiny">累计</text>
+    <rect x="154" y="162" width="204" height="76" rx="15" fill="#ffffff" stroke="#e2e7f0"/>
+    <text x="172" y="196" font-size="21" font-weight="750">1.2M</text><text x="172" y="220" class="tiny">今日</text>
+    <rect x="370" y="162" width="204" height="76" rx="15" fill="#ffffff" stroke="#e2e7f0"/>
+    <text x="388" y="196" font-size="21" font-weight="750">8.8M</text><text x="388" y="220" class="tiny">本月</text>
+    <rect x="586" y="162" width="232" height="76" rx="15" fill="#ffffff" stroke="#e2e7f0"/>
+    <text x="604" y="196" font-size="21" font-weight="750">42M</text><text x="604" y="220" class="tiny">累计</text>
   </g>
-  <text x="154" y="482" class="tiny">今日缓存命中率 98.7%</text>
+  <text x="154" y="262" class="tiny">今日缓存命中率 98.7%</text>
 
-  <text x="154" y="520" class="label">当月每日用量</text>
-  <text x="603" y="520" class="muted" font-size="20">‹</text>
-  <text x="652" y="520" font-size="15" font-weight="700">2026年8月</text>
-  <text x="792" y="520" class="muted" font-size="20">›</text>
+  <!-- Monthly view: title row, calendar/curve toggle, calendar heatmap -->
+  <text x="154" y="296" class="label">当月每日用量</text>
+  <text x="726" y="296" class="muted" font-size="20">‹</text>
+  <text x="772" y="296" font-size="15" font-weight="700" text-anchor="middle">2026年8月</text>
+  <text x="812" y="296" class="muted" font-size="20">›</text>
+
+  <g>
+    <rect x="154" y="306" width="82" height="24" rx="7" fill="#eef1f6"/>
+    <rect x="155" y="307" width="40" height="22" rx="6" fill="#ffffff" stroke="#d7dfec"/>
+    <text x="175" y="322" font-size="11" text-anchor="middle" font-weight="500">日历</text>
+    <text x="215" y="322" font-size="11" text-anchor="middle" class="muted">曲线</text>
+  </g>
 
   <g class="tiny" text-anchor="middle">
-    <text x="181" y="554">一</text><text x="267" y="554">二</text><text x="353" y="554">三</text><text x="439" y="554">四</text><text x="525" y="554">五</text><text x="611" y="554">六</text><text x="697" y="554">日</text>
+    <text x="228" y="348">一</text><text x="314" y="348">二</text><text x="400" y="348">三</text><text x="486" y="348">四</text><text x="572" y="348">五</text><text x="658" y="348">六</text><text x="744" y="348">日</text>
   </g>
   <g>
-    <!-- calendar row 1 -->
-    <rect x="574" y="570" width="74" height="48" rx="11" fill="#edf0f5"/><text x="611" y="595" class="day">1</text>
-    <rect x="660" y="570" width="74" height="48" rx="11" fill="#edf0f5"/><text x="697" y="595" class="day">2</text>
+    <!-- row 1: Aug 1 2026 falls on Saturday -->
+    <rect x="621" y="356" width="74" height="36" rx="9" fill="#edf0f5"/><text x="658" y="374" class="day">1</text>
+    <rect x="707" y="356" width="74" height="36" rx="9" fill="#edf0f5"/><text x="744" y="374" class="day">2</text>
     <!-- row 2 -->
-    <rect x="144" y="628" width="74" height="48" rx="11" fill="#edf0f5"/><text x="181" y="653" class="day">3</text>
-    <rect x="230" y="628" width="74" height="48" rx="11" fill="#edf0f5"/><text x="267" y="653" class="day">4</text>
-    <rect x="316" y="628" width="74" height="48" rx="11" fill="#edf0f5"/><text x="353" y="653" class="day">5</text>
-    <rect x="402" y="628" width="74" height="48" rx="11" fill="#edf0f5"/><text x="439" y="653" class="day">6</text>
-    <rect x="488" y="628" width="74" height="48" rx="11" fill="#edf0f5"/><text x="525" y="653" class="day">7</text>
-    <rect x="574" y="628" width="74" height="48" rx="11" fill="#edf0f5"/><text x="611" y="653" class="day">8</text>
-    <rect x="660" y="628" width="74" height="48" rx="11" fill="#edf0f5"/><text x="697" y="653" class="day">9</text>
+    <rect x="191" y="396" width="74" height="36" rx="9" fill="#edf0f5"/><text x="228" y="414" class="day">3</text>
+    <rect x="277" y="396" width="74" height="36" rx="9" fill="#edf0f5"/><text x="314" y="414" class="day">4</text>
+    <rect x="363" y="396" width="74" height="36" rx="9" fill="#edf0f5"/><text x="400" y="414" class="day">5</text>
+    <rect x="449" y="396" width="74" height="36" rx="9" fill="#edf0f5"/><text x="486" y="414" class="day">6</text>
+    <rect x="535" y="396" width="74" height="36" rx="9" fill="#edf0f5"/><text x="572" y="414" class="day">7</text>
+    <rect x="621" y="396" width="74" height="36" rx="9" fill="#edf0f5"/><text x="658" y="414" class="day">8</text>
+    <rect x="707" y="396" width="74" height="36" rx="9" fill="#edf0f5"/><text x="744" y="414" class="day">9</text>
     <!-- row 3 -->
-    <rect x="144" y="686" width="74" height="48" rx="11" fill="#edf0f5"/><text x="181" y="711" class="day">10</text>
-    <rect x="230" y="686" width="74" height="48" rx="11" fill="#edf0f5"/><text x="267" y="711" class="day">11</text>
-    <rect x="316" y="686" width="74" height="48" rx="11" fill="#dce9ff"/><text x="353" y="711" class="day">12</text>
-    <rect x="402" y="686" width="74" height="48" rx="11" fill="#2368f2"/><text x="439" y="711" class="day day-light">13</text>
-    <rect x="488" y="686" width="74" height="48" rx="11" fill="#4d8cf5"/><text x="525" y="711" class="day day-light">14</text>
-    <rect x="574" y="686" width="74" height="48" rx="11" fill="#a9c8fb" stroke="#2368f2"/><text x="611" y="711" class="day">15</text>
-    <rect x="660" y="686" width="74" height="48" rx="11" fill="#edf0f5"/><text x="697" y="711" class="day">16</text>
+    <rect x="191" y="436" width="74" height="36" rx="9" fill="#edf0f5"/><text x="228" y="454" class="day">10</text>
+    <rect x="277" y="436" width="74" height="36" rx="9" fill="#edf0f5"/><text x="314" y="454" class="day">11</text>
+    <rect x="363" y="436" width="74" height="36" rx="9" fill="#dce9ff"/><text x="400" y="454" class="day">12</text>
+    <rect x="449" y="436" width="74" height="36" rx="9" fill="#2368f2"/><text x="486" y="454" class="day day-light">13</text>
+    <rect x="535" y="436" width="74" height="36" rx="9" fill="#4d8cf5"/><text x="572" y="454" class="day day-light">14</text>
+    <rect x="621" y="436" width="74" height="36" rx="9" fill="#a9c8fb" stroke="#2368f2"/><text x="658" y="454" class="day">15</text>
+    <rect x="707" y="436" width="74" height="36" rx="9" fill="#edf0f5"/><text x="744" y="454" class="day">16</text>
+    <!-- row 4 -->
+    <rect x="191" y="476" width="74" height="36" rx="9" fill="#dce9ff"/><text x="228" y="494" class="day">17</text>
+    <rect x="277" y="476" width="74" height="36" rx="9" fill="#4d8cf5"/><text x="314" y="494" class="day day-light">18</text>
+    <rect x="363" y="476" width="74" height="36" rx="9" fill="#edf0f5"/><text x="400" y="494" class="day">19</text>
+    <rect x="449" y="476" width="74" height="36" rx="9" fill="#a9c8fb"/><text x="486" y="494" class="day">20</text>
+    <rect x="535" y="476" width="74" height="36" rx="9" fill="#edf0f5"/><text x="572" y="494" class="day">21</text>
+    <rect x="621" y="476" width="74" height="36" rx="9" fill="#edf0f5"/><text x="658" y="494" class="day">22</text>
+    <rect x="707" y="476" width="74" height="36" rx="9" fill="#dce9ff"/><text x="744" y="494" class="day">23</text>
+    <!-- row 5 -->
+    <rect x="191" y="516" width="74" height="36" rx="9" fill="#edf0f5"/><text x="228" y="534" class="day">24</text>
+    <rect x="277" y="516" width="74" height="36" rx="9" fill="#a9c8fb"/><text x="314" y="534" class="day">25</text>
+    <rect x="363" y="516" width="74" height="36" rx="9" fill="#2368f2"/><text x="400" y="534" class="day day-light">26</text>
+    <rect x="449" y="516" width="74" height="36" rx="9" fill="#edf0f5"/><text x="486" y="534" class="day">27</text>
+    <rect x="535" y="516" width="74" height="36" rx="9" fill="#4d8cf5"/><text x="572" y="534" class="day day-light">28</text>
+    <rect x="621" y="516" width="74" height="36" rx="9" fill="#edf0f5"/><text x="658" y="534" class="day">29</text>
+    <rect x="707" y="516" width="74" height="36" rx="9" fill="#edf0f5"/><text x="744" y="534" class="day">30</text>
+    <!-- row 6 -->
+    <rect x="191" y="556" width="74" height="36" rx="9" fill="#edf0f5"/><text x="228" y="574" class="day">31</text>
   </g>
-  <g transform="translate(154 758)">
-    <text x="0" y="16" class="tiny">少</text>
-    <rect x="28" y="5" width="13" height="13" rx="3" fill="#edf0f5"/><rect x="47" y="5" width="13" height="13" rx="3" fill="#dce9ff"/><rect x="66" y="5" width="13" height="13" rx="3" fill="#a9c8fb"/><rect x="85" y="5" width="13" height="13" rx="3" fill="#4d8cf5"/><rect x="104" y="5" width="13" height="13" rx="3" fill="#2368f2"/>
-    <text x="126" y="16" class="tiny">多</text>
+  <g transform="translate(154 604)">
+    <text x="0" y="12" class="tiny">少</text>
+    <rect x="28" y="2" width="13" height="13" rx="3" fill="#edf0f5"/><rect x="47" y="2" width="13" height="13" rx="3" fill="#dce9ff"/><rect x="66" y="2" width="13" height="13" rx="3" fill="#a9c8fb"/><rect x="85" y="2" width="13" height="13" rx="3" fill="#4d8cf5"/><rect x="104" y="2" width="13" height="13" rx="3" fill="#2368f2"/>
+    <text x="126" y="12" class="tiny">多</text>
+  </g>
+
+  <!-- Today by model: replacing the removed recent-session cost block -->
+  <text x="154" y="646" class="label">今日模型消耗</text>
+  <g class="row">
+    <text x="154" y="677" fill="#536179">deepseek-official · deepseek-chat</text>
+    <rect x="370" y="668" width="208" height="6" rx="3" fill="#2368f2" opacity="0.65"/>
+    <text x="818" y="677" text-anchor="end" fill="#172033" font-variant-numeric="tabular-nums">620K</text>
+    <line x1="154" y1="690" x2="818" y2="690" stroke="#eef1f6"/>
+
+    <text x="154" y="707" fill="#536179">ark · deepseek-chat</text>
+    <rect x="370" y="698" width="136" height="6" rx="3" fill="#2368f2" opacity="0.65"/>
+    <text x="818" y="707" text-anchor="end" fill="#172033" font-variant-numeric="tabular-nums">410K</text>
+    <line x1="154" y1="720" x2="818" y2="720" stroke="#eef1f6"/>
+
+    <text x="154" y="737" fill="#536179">openrouter · claude-sonnet-4</text>
+    <rect x="370" y="728" width="32" height="6" rx="3" fill="#2368f2" opacity="0.65"/>
+    <text x="818" y="737" text-anchor="end" fill="#172033" font-variant-numeric="tabular-nums">96K</text>
+  </g>
+
+  <!-- Secret-free export -->
+  <text x="154" y="774" class="label">安全导出</text>
+  <g>
+    <rect x="154" y="784" width="88" height="28" rx="9" fill="#f4f7fc" stroke="#e2e7f0"/>
+    <text x="198" y="802" font-size="12" text-anchor="middle" fill="#2b4d88">每日 CSV</text>
+    <rect x="252" y="784" width="88" height="28" rx="9" fill="#f4f7fc" stroke="#e2e7f0"/>
+    <text x="296" y="802" font-size="12" text-anchor="middle" fill="#2b4d88">会话 CSV</text>
+    <rect x="350" y="784" width="88" height="28" rx="9" fill="#f4f7fc" stroke="#e2e7f0"/>
+    <text x="394" y="802" font-size="12" text-anchor="middle" fill="#2b4d88">完整 JSON</text>
   </g>
 
   <!-- Release callouts -->
   <g transform="translate(922 126)">
     <rect x="0" y="0" width="112" height="30" rx="15" fill="#e7efff"/>
-    <text x="56" y="20" text-anchor="middle" fill="#2468db" font-size="12" font-weight="750">v0.2.0</text>
+    <text x="56" y="20" text-anchor="middle" fill="#2468db" font-size="12" font-weight="750">v0.4.0</text>
     <text x="0" y="78" font-size="38" font-weight="800">一个面板，</text>
-    <text x="0" y="124" font-size="38" font-weight="800">看清每个 Provider</text>
-    <text x="0" y="166" font-size="16" class="muted">余额、订阅额度与 Token 用量统一呈现。</text>
-    <text x="0" y="192" font-size="16" class="muted">只显示当前选择项，后台每 5 分钟持续刷新。</text>
+    <text x="0" y="124" font-size="38" font-weight="800">看清 Token 用量</text>
+    <text x="0" y="166" font-size="16" class="muted">今日、本月、累计与模型排行统一呈现。</text>
+    <text x="0" y="192" font-size="16" class="muted">供应商账户查询已移除，后台只做本地聚合。</text>
 
     <g transform="translate(0 244)">
       <rect width="390" height="86" rx="18" fill="#ffffff" stroke="#dfe6f2"/>
       <rect x="18" y="18" width="50" height="50" rx="15" fill="#eaf2ff"/>
-      <path d="M34 43h18M43 34v18" stroke="#246ff2" stroke-width="3" stroke-linecap="round"/>
-      <text x="86" y="39" font-size="15" font-weight="750">统一账户卡片</text>
-      <text x="86" y="61" font-size="13" class="muted">API 余额与 Token Plan 使用同一框架</text>
+      <g fill="#246ff2"><rect x="28" y="46" width="8" height="12" rx="2"/><rect x="39" y="38" width="8" height="20" rx="2"/><rect x="50" y="30" width="8" height="28" rx="2"/></g>
+      <text x="86" y="39" font-size="15" font-weight="750">今日模型消耗</text>
+      <text x="86" y="61" font-size="13" class="muted">按 provider · model 排行与占比条</text>
     </g>
     <g transform="translate(0 344)">
       <rect width="390" height="86" rx="18" fill="#ffffff" stroke="#dfe6f2"/>
       <rect x="18" y="18" width="50" height="50" rx="15" fill="#ecf9f2"/>
-      <path d="M32 53l9-10 7 6 9-14" fill="none" stroke="#20a566" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-      <text x="86" y="39" font-size="15" font-weight="750">真实用量归集</text>
-      <text x="86" y="61" font-size="13" class="muted">按日期、供应商与模型下钻分析</text>
+      <path d="M30 54c6-14 10-22 15-22s7 12 11 12 6-8 9-14" fill="none" stroke="#20a566" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="86" y="39" font-size="15" font-weight="750">日历 / 曲线视图</text>
+      <text x="86" y="61" font-size="13" class="muted">平滑折线 + 渐变面积，按平方根缩放</text>
     </g>
     <g transform="translate(0 444)">
       <rect width="390" height="86" rx="18" fill="#ffffff" stroke="#dfe6f2"/>
       <rect x="18" y="18" width="50" height="50" rx="15" fill="#fff4e7"/>
-      <path d="M43 29c9 0 16 7 16 16s-7 16-16 16-16-7-16-16 7-16 16-16Z" fill="none" stroke="#e58a25" stroke-width="3"/><path d="M43 36v10l7 4" fill="none" stroke="#e58a25" stroke-width="3" stroke-linecap="round"/>
-      <text x="86" y="39" font-size="15" font-weight="750">后台自动刷新</text>
-      <text x="86" y="61" font-size="13" class="muted">面板关闭后仍维持账户快照</text>
+      <text x="43" y="50" text-anchor="middle" fill="#e58a25" font-size="14" font-weight="750">33.8M</text>
+      <text x="86" y="39" font-size="15" font-weight="750">紧凑数字</text>
+      <text x="86" y="61" font-size="13" class="muted">K/M/B/T 缩写，悬停显示精确值</text>
     </g>
     <g transform="translate(0 568)">
       <circle cx="9" cy="9" r="9" fill="#246ff2"/><path d="M5 9l3 3 6-7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

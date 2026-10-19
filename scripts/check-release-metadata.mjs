@@ -19,8 +19,8 @@ const [pkg, lock, catalog, source, patch, client, readme] = await Promise.all([
 assert.equal(pkg.name, EXPECTED_PACKAGE_NAME, "unexpected scoped npm package identity");
 assert.match(pkg.version, SEMVER, "package version must be valid SemVer");
 assert.equal(pkg.repository?.url, EXPECTED_REPOSITORY, "repository metadata drifted");
-assert.equal(pkg.homepage, "https://github.com/Ychris12138/dsh-usage-stats#readme", "homepage metadata drifted");
-assert.equal(pkg.bugs, "https://github.com/Ychris12138/dsh-usage-stats/issues", "bugs metadata drifted");
+assert.equal(pkg.homepage, "https://github.com/uskyu/dsh-usage-stats#readme", "homepage metadata drifted");
+assert.equal(pkg.bugs, "https://github.com/uskyu/dsh-usage-stats/issues", "bugs metadata drifted");
 assert.equal(pkg.publishConfig?.access, "public", "scoped package must publish with public access");
 assert.equal(pkg.main, "lib/index.js");
 assert.equal(pkg.exports?.["."], "./lib/index.js");

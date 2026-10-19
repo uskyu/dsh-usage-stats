@@ -1,12 +1,12 @@
 # Release checklist
 
-This is the release gate for `@ychris12138/dsh-usage-stats`. Completing the checklist prepares a release; it does not authorize npm publishing, tagging, or creating a GitHub Release.
+This is the release gate for `@uskyu/dsh-usage-stats`. Completing the checklist prepares a release; it does not authorize npm publishing, tagging, or creating a GitHub Release.
 
 ## 1. Release candidate baseline
 
 - [ ] Start from the reviewed release-candidate PR merged into a clean `main`; record this commit as `RC_BASE_SHA` for provenance only.
 - [ ] Do not publish or tag `RC_BASE_SHA`: the release version has not been committed yet.
-- [ ] Confirm `cordis.patch.yml` quotes `@ychris12138/dsh-usage-stats` and `lib/client.js` registers the same identity through `__ModuleLoader__.load()`.
+- [ ] Confirm `cordis.patch.yml` quotes `@uskyu/dsh-usage-stats` and `lib/client.js` registers the same identity through `__ModuleLoader__.load()`.
 - [ ] Confirm the release notes describe estimated costs as estimates and list every unsupported/fail-closed case.
 
 ## 2. Automated gates
@@ -27,13 +27,14 @@ npm pack --json
 
 - [ ] Fresh isolated profile: install, restart DSH, hard-refresh the browser, open Usage Stats.
 - [ ] Upgrade an existing v0.3.2 profile without deleting its usage cache or monitor configuration.
+- [ ] Confirm the npm identity rename is upgrade-safe: remove the previous scoped package and its Cordis entry from `cordis.patch.yml`, install `@uskyu/dsh-usage-stats`, and verify the plugin mounts exactly once (the installer only migrates the unscoped `dsh-usage-stats` entry and an unquoted scoped name).
 - [ ] Confirm a valid old cache is migrated/refolded and retains exact token totals.
 - [ ] Replace the cache with malformed JSON; confirm the plugin rebuilds from authoritative session events without blocking DSH startup.
 - [ ] Confirm existing account monitors remain compatible and no new provider/monitor is inserted into user configuration.
 - [ ] Confirm legacy `display.currentSessionPill: true` and `false` configurations both start successfully and neither registers composer UI.
-- [ ] Confirm a persisted provider selection survives browser refresh and DSH restart; removing that provider clears the saved id and uses the existing fallback.
-- [ ] Confirm OrcaRouter is added only through the explicit fresh-user synthetic Add action; startup performs no settings mutation and existing provider configuration is not overwritten.
-- [ ] Confirm OrcaRouter balance succeeds through `/v1/balance` or the compatible billing fallback, pricing stays unknown/null, and no credential value reaches the browser or export payloads.
+- [ ] ~~Confirm a persisted provider selection survives browser refresh and DSH restart; removing that provider clears the saved id and uses the existing fallback.~~ Not applicable since v0.4.0: the panel has no provider selector and the client stores only the calendar/curve view preference (`@uskyu/dsh-usage-stats:view:v1`).
+- [ ] ~~Confirm OrcaRouter is added only through the explicit fresh-user synthetic Add action; startup performs no settings mutation and existing provider configuration is not overwritten.~~ Not applicable since v0.4.0: the panel exposes no OrcaRouter entry. The route remains server-side only.
+- [ ] ~~Confirm OrcaRouter balance succeeds through `/v1/balance` or the compatible billing fallback, pricing stays unknown/null, and no credential value reaches the browser or export payloads.~~ Still valid as a server-side API check: verify through `GET /api/usage-stats/account?provider=<id>` and keep the pricing/credential assertions.
 - [ ] Confirm unchanged persisted fallback logs read only from the folded cursor, appended events remain incremental, and truncation/rewrite still refolds from sequence 0 (#58/#57).
 
 ## 4. Export and security
@@ -46,7 +47,21 @@ npm pack --json
 
 ## 5. Real DSH release-candidate regression
 
-### v0.3.5-specific gates
+### v0.4.0-specific gates
+
+The v0.4.0 panel is token-usage only. These checks replace the v0.3.5 account-card gates.
+
+- [ ] The sidebar footer entry and the panel title read "用量" / "Usage"; no "Balance" wording remains in the panel.
+- [ ] The panel renders today/month/all-time totals, the cache-hit caption, the calendar/curve toggle, the last-14-days list, the "Today by model" ranking, and the three export links — and no provider selector, balance card, subscription quota bar, account health, or OrcaRouter entry.
+- [ ] Values below 10,000 keep thousands separators (`1,234`); 10,000 and above abbreviate to at most four characters plus a K/M/B/T suffix (`33.8M`, `6.2B`, `1T`); hovering a value shows the exact number.
+- [ ] Switching to the curve view renders the smoothed SVG line with a gradient area on a square-root scale; clicking a day and pressing Enter/Space on a focused day both open that day's per-model detail, and the calendar/curve choice survives a browser refresh through `localStorage` key `@uskyu/dsh-usage-stats:view:v1`.
+- [ ] "Today by model" lists up to five `provider · model` rows sorted by today's tokens, each with a share-of-today bar and an abbreviated token count (exact value in the tooltip); a day without usage shows the empty-state text.
+- [ ] The client issues no request to `/api/usage-stats/providers`, `/api/usage-stats/account`, `/api/usage-stats/balance`, `/api/usage-stats/subscriptions`, or `/api/usage-stats/integrations/orcarouter`: only `/api/usage-stats/usage` and the export downloads are called.
+- [ ] All account routes stay reachable and unchanged for external API consumers, while the background timer performs local token aggregation only.
+
+### v0.3.5-specific gates (historical)
+
+This block records the v0.3.5 acceptance run. Its account-card and provider-selector items describe the UI as it existed before v0.4.0; keep them for provenance and verify current behavior against the v0.4.0 gates above.
 
 DSH 0.2 Desktop / DeepSeek Account:
 
@@ -94,20 +109,20 @@ Declarative balance:
 
 - [ ] Test the latest supported `@deepseek-ai/dsh` Desktop/Web release candidate with an isolated profile.
 - [ ] Confirm DSH starts without `Failed to load plugins` or loader identity errors.
-- [ ] Confirm client bundle load and that `sidebar.footer.action` is the only extension point registered by dsh-usage-stats; verify panel open/close, provider switching, cost/budget states, and manual Retry.
+- [ ] Confirm client bundle load and that `sidebar.footer.action` is the only extension point registered by dsh-usage-stats; verify panel open/close, the calendar/curve toggle, today-by-model ranking, budget states, and manual refresh.
 - [ ] At 700 / 500 / 400 / 320 px, confirm dsh-usage-stats registers no `conversation.input.*` component or composer DOM and leaves native Permission / Model / Context / Submit layout untouched. Record any remaining sub-400 px overlap as DSH host behavior rather than changing host controls from this plugin.
 - [ ] Test the sidebar action and panel in light and dark themes.
 - [ ] Confirm Last 14 days token values retain an 84 px minimum width, right alignment, and tabular numerals while the date column shrinks/ellipsizes without adding narrow-panel overflow (#75).
-- [ ] With `refresh.enabled: false`, confirm one first account fetch, no expiry-driven upstream requests, manual Retry, and a fresh fetch after provider configuration changes.
-- [ ] #53 and #14 are closed and are not v0.3.5 release blockers. If a real enterprise proxy or MiniMax Coding Plan environment is available, record sanitized observations; otherwise mark those checks `NOT TESTED` without claiming a fix.
+- [ ] Confirm the background timer performs local token aggregation only: with any `refresh.enabled` / `disableBackgroundRefresh` value, no background upstream account request is made and repeated panel refreshes return local aggregates. The legacy `refresh.*` / `disableBackgroundRefresh` keys must still be accepted so old configurations start unchanged (they now only gate server-side account-API caching, not the panel).
+- [ ] #53 and #14 are closed and are not v0.4.0 release blockers. If a real enterprise proxy or MiniMax Coding Plan environment is available, record sanitized observations; otherwise mark those checks `NOT TESTED` without claiming a fix.
 
 ## 6. Create the immutable release commit
 
 Do not run this section until every release-candidate gate above passes and the maintainer approves preparing the release commit.
 
 - [ ] Create a release branch from the reviewed `main` at `RC_BASE_SHA`.
-- [ ] Run `npm run release:sync -- 0.3.5` once to update `package.json`, `package-lock.json`, the Community Market catalog, and documented stable-version references together.
-- [ ] Confirm the v0.3.5 release notes use final stable wording, preserve the historical v0.3.0/v0.3.1/v0.3.2/v0.3.3 notes, and do not claim unverified #14/#53 fixes or include out-of-scope behavior.
+- [ ] Run `npm run release:sync -- 0.4.0` once to update `package.json`, `package-lock.json`, the Community Market catalog, and documented stable-version references together.
+- [ ] Confirm the v0.4.0 release notes use final stable wording, preserve the historical v0.3.x notes, and do not claim unverified #14/#53 fixes or include out-of-scope behavior.
 - [ ] Run the release gates again against the synchronized version:
 
 ```bash
@@ -116,20 +131,20 @@ npm test
 npm pack --json
 ```
 
-- [ ] Inspect the final pack manifest, then commit all version/release metadata changes with `chore: prepare v0.3.5 release`.
+- [ ] Inspect the final pack manifest, then commit all version/release metadata changes with `chore: prepare v0.4.0 release`.
 - [ ] Record that commit as `RELEASE_SHA`; this replaces `RC_BASE_SHA` as the only publish/tag identity.
 - [ ] Confirm the working tree is clean and `HEAD` equals `RELEASE_SHA`.
 - [ ] Confirm the committed package version, not merely the working-tree version:
 
 ```bash
-test "$(git show "$RELEASE_SHA:package.json" | jq -r .version)" = "0.3.5"
+test "$(git show "$RELEASE_SHA:package.json" | jq -r .version)" = "0.4.0"
 ```
 
 The release invariant is:
 
 ```text
 npm published source commit
-== v0.3.5 tag commit
+== v0.4.0 tag commit
 == GitHub Release commit
 == package/catalog version commit
 == RELEASE_SHA
@@ -141,16 +156,16 @@ Do not run this section until the immutable release commit exists and the mainta
 
 - [ ] `npm whoami` returns the expected publisher.
 - [ ] From a clean checkout/worktree at exactly `RELEASE_SHA`, run `npm publish --access public --registry=https://registry.npmjs.org/`.
-- [ ] `npm view "@ychris12138/dsh-usage-stats" version --registry=https://registry.npmjs.org/` equals the target version.
+- [ ] `npm view "@uskyu/dsh-usage-stats" version --registry=https://registry.npmjs.org/` equals the target version.
 - [ ] Merge or push the release commit to `main` according to the chosen branch workflow; verify `main` contains the exact `RELEASE_SHA` without recreating the release changes.
-- [ ] Only after npm and `main` verification: create the signed/annotated `v0.3.5` tag pointing explicitly to `RELEASE_SHA`.
+- [ ] Only after npm and `main` verification: create the signed/annotated `v0.4.0` tag pointing explicitly to `RELEASE_SHA`.
 - [ ] Verify the tag resolves to the published source commit:
 
 ```bash
-test "$(git rev-parse v0.3.5^{commit})" = "$RELEASE_SHA"
+test "$(git rev-parse v0.4.0^{commit})" = "$RELEASE_SHA"
 ```
 
-- [ ] Create the GitHub Release from `v0.3.5`; verify it resolves to `RELEASE_SHA`.
+- [ ] Create the GitHub Release from `v0.4.0`; verify it resolves to `RELEASE_SHA`.
 - [ ] Verify the public Pages `catalog-source.json` and `/v1/plugins` response content type, package name, and exact version.
 - [ ] Install the exact npm version through DSH Desktop Community Market and restart the host.
 - [ ] Close the npm/market release issue only after the Desktop Market installation succeeds.

@@ -1,13 +1,13 @@
 {
-  "name": "@ychris12138/dsh-usage-stats",
-  "description": "Token usage, provider accounts, session cost estimates, budgets, and exports for the dsh web GUI",
-  "version": "0.3.5",
+  "name": "@uskyu/dsh-usage-stats",
+  "description": "Token usage analytics for the dsh web GUI: daily heatmap or curve, per-model rankings, cost estimates, budgets, and exports",
+  "version": "0.4.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ychris12138/dsh-usage-stats.git"
+    "url": "git+https://github.com/uskyu/dsh-usage-stats.git"
   },
-  "homepage": "https://github.com/Ychris12138/dsh-usage-stats#readme",
-  "bugs": "https://github.com/Ychris12138/dsh-usage-stats/issues",
+  "homepage": "https://github.com/uskyu/dsh-usage-stats#readme",
+  "bugs": "https://github.com/uskyu/dsh-usage-stats/issues",
   "keywords": [
     "deepseek",
     "deepseek-harness",
@@ -28,6 +28,7 @@
     "docs/release-notes-v0.3.3.md",
     "docs/release-notes-v0.3.4.md",
     "docs/release-notes-v0.3.5.md",
+    "docs/release-notes-v0.4.0.md",
     "scripts/install.mjs",
     "README.md",
     "LICENSE",

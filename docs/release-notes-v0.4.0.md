@@ -117,6 +117,17 @@ multi-model daily trend with a model-usage donut, both driven by a rolling
   donut share the selected range (with the trend's 7-day floor), while the
   calendar view keeps its own month.
 
+### Compact, centred month calendar
+
+- The calendar heatmap no longer stretches across the whole panel: `.usg_heat`
+  is capped (`max-width:248px; margin:0 auto`). Because the cap applies to the
+  whole calendar block, the cells, the gaps and the legend scale down together —
+  the grid keeps its square cells and only the date font drops one step — and
+  the block is centred inside the panel instead of hugging the left edge.
+- This is a deliberate layout change, not a rendering fault or clipping: the
+  calendar block is now roughly 1.2× the height of the trend chart (~261px vs
+  ~207px) instead of ~1.8×. The trend view is untouched.
+
 ## Compatibility
 
 - Supported DSH range is unchanged (`@deepseek-ai/dsh >= 0.1.0-rc.6`, `web`

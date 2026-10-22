@@ -169,6 +169,14 @@ if (!viewToggleButtonRule.includes("cursor:pointer")) throw new Error("the view 
 if (viewToggleActiveRule === "") throw new Error("the active view must be visually distinguishable");
 const trendSvgRule = /\.usg_trendSvg\{([^}]*)\}/.exec(source)?.[1] ?? "";
 if (!trendSvgRule.includes("width:100%")) throw new Error("the trend plot must scale to the panel width");
+// The month grid is square-celled, so its height grows with its width. Capping
+// the block scales the whole calendar down together (cells, gaps, legend) and
+// centres it, keeping the calendar's footprint close to the curve's instead of
+// nearly twice it. Measured 367px -> 261px for the section at a 248px cap.
+const heatRule = /\.usg_heat\{([^}]*)\}/.exec(source)?.[1] ?? "";
+if (!/max-width:\d+px/.test(heatRule)) throw new Error("the calendar must be capped in width, or its square cells make it tower over the curve");
+if (!heatRule.includes("margin:0 auto")) throw new Error("the shrunken calendar must stay centred in the panel");
+if (!/(?:^|;)aspect-ratio:1\/1(?:;|$)/.test(/\.usg_cell\{([^}]*)\}/.exec(source)?.[1] ?? "")) throw new Error("the calendar cells must stay square, so the shrink is proportional");
 // The hit layer overlays the static SVG, so it must not consume layout height.
 const trendHitsRule = /\.usg_trendHits\{([^}]*)\}/.exec(source)?.[1] ?? "";
 const trendHitRule = /\.usg_trendHit\{([^}]*)\}/.exec(source)?.[1] ?? "";

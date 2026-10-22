@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" role="img" aria-labelledby="title desc">
   <title id="title">dsh-usage-stats token usage panel</title>
-  <desc id="desc">A sanitized vector preview of the DeepSeek Harness usage panel: today, month and all-time token totals, a rolling 7-day range switch driving a multi-model daily trend that ends today, a model-usage donut over the same window with two-way hover linking, a curve/calendar view switch, and secret-free export links.</desc>
+  <desc id="desc">A sanitized vector preview of the DeepSeek Harness usage panel: today, month and all-time token totals, a three-way range switch (today / last 7 days / last 30 days) where "today" sizes the donut only and the multi-model daily trend keeps its 7-day floor and ends today, a model-usage donut with two-way hover linking, a curve/calendar view switch, and secret-free export links.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#f7f9ff"/>
@@ -73,13 +73,14 @@
   </g>
   <text x="154" y="262" class="tiny">今日缓存命中率 98.7%</text>
 
-  <!-- Analysis header: title, rolling range switch, then the view switch (no month arrows in curve view) -->
+  <!-- Analysis header: title, three-way range switch, then the view switch (no month arrows in curve view) -->
   <text x="154" y="305" class="label">每日 Token 趋势图</text>
   <g>
-    <rect x="590" y="288" width="124" height="24" rx="7" fill="#eef1f6"/>
-    <rect x="591" y="289" width="58" height="22" rx="6" fill="#ffffff" stroke="#d7dfec"/>
-    <text x="620" y="304" class="seg" text-anchor="middle" font-weight="500">近 7 天</text>
-    <text x="681" y="304" class="seg muted" text-anchor="middle">近 1 个月</text>
+    <rect x="546" y="288" width="168" height="24" rx="7" fill="#eef1f6"/>
+    <text x="569" y="304" class="seg muted" text-anchor="middle">每天</text>
+    <rect x="592" y="289" width="58" height="22" rx="6" fill="#ffffff" stroke="#d7dfec"/>
+    <text x="621" y="304" class="seg" text-anchor="middle" font-weight="500">近 7 天</text>
+    <text x="682" y="304" class="seg muted" text-anchor="middle">近 30 天</text>
   </g>
   <g>
     <rect x="722" y="288" width="96" height="24" rx="7" fill="#eef1f6"/>
@@ -150,7 +151,7 @@
   </g>
 
   <!-- Model usage donut over the same window; the "ark" slice is hovered -->
-  <text x="154" y="570" class="label">模型用量</text>
+  <text x="154" y="570" class="label">近 7 天模型用量</text>
   <g>
     <circle cx="218" cy="646" r="52" fill="none" stroke="#1f6feb" stroke-width="16" stroke-dasharray="129.33 326.73" stroke-dashoffset="0" transform="rotate(-90 218 646)"/>
     <circle cx="218" cy="646" r="52" fill="none" stroke="#12a150" stroke-width="21" stroke-dasharray="84.4 326.73" stroke-dashoffset="-129.33" transform="rotate(-90 218 646)"/>
@@ -216,8 +217,8 @@
     <text x="56" y="20" text-anchor="middle" fill="#2468db" font-size="12" font-weight="750">v0.4.0</text>
     <text x="0" y="78" font-size="38" font-weight="800">一个面板，</text>
     <text x="0" y="124" font-size="38" font-weight="800">看清 Token 用量</text>
-    <text x="0" y="166" font-size="16" class="muted">近 7 天 / 近 1 个月的滚动窗口，止于今天。</text>
-    <text x="0" y="192" font-size="16" class="muted">同一区间驱动折线与环形图，月份箭头只在日历里。</text>
+    <text x="0" y="166" font-size="16" class="muted">每天 / 近 7 天 / 近 30 天的滚动窗口，止于今天。</text>
+    <text x="0" y="192" font-size="16" class="muted">「每天」只改环形图，曲线仍保持近 7 天。</text>
 
     <g transform="translate(0 244)">
       <rect width="390" height="86" rx="18" fill="#ffffff" stroke="#dfe6f2"/>

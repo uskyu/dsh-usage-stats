@@ -2,8 +2,8 @@
 
 `v0.4.0` is a focus release: the panel is now a token-usage dashboard, the package
 identity moved to `@uskyu/dsh-usage-stats`, and the analysis area is a default
-multi-model daily trend over a rolling 7-day/1-month window, with a model-usage
-donut over the same window.
+multi-model daily trend with a model-usage donut, both driven by a rolling
+"每天 / 近 7 天 / 近 30 天" range.
 
 ## Highlights
 
@@ -38,30 +38,36 @@ donut over the same window.
   Credentials remain server-side; the browser receives aggregate token usage and
   the export downloads only.
 
-### Rolling time range drives the trend and the donut
+### Rolling range: today / last 7 days / last 30 days
 
-- A new range switch ("近 7 天" / "近 1 个月") sits at the far left of the
-  analysis header row, with the view switch ("曲线" / "日历") to its right. Both
-  windows are **rolling and end today**: 7 days including today, or the last 30
-  calendar days, so they cross month boundaries correctly. The default is
-  "近 7 天".
-- One window feeds both charts, so the ring always describes the same period as
-  the lines. The choice is stored under `@uskyu/dsh-usage-stats:range:v1`
-  (`week` / `month`); an unknown value, disabled storage or a write failure falls
-  back to `week`.
-- The month navigation (`‹` / `›` and `回到今天`) now appears **only in the
-  calendar view**: the rolling window is independent of the calendar month, and
-  month arrows next to a rolling chart wrongly suggest the trend range can be
-  paged.
+- The range switch in the analysis header row has three options
+  ("每天" / "近 7 天" / "近 30 天", in that order) and sits at the far left, with
+  the view switch ("曲线" / "日历") to its right. All windows are **rolling and
+  end today**: today, 7 days including today, or the last 30 calendar days, so
+  they cross month boundaries correctly. The default is "近 7 天".
+- The range is **asymmetric by design**: "每天" sizes the donut only (today's
+  per-model share), while the trend chart keeps its 7-day floor and never
+  collapses to a single point
+  (`trendDays = rangeDays >= 7 ? rangeDays : 7`). "近 7 天" and "近 30 天" drive
+  both charts. Every range button carries a `title` hint explaining this
+  ("每天只看环形图" / "曲线与环形图都是近 7 天" / "曲线与环形图都是近 30 天").
+- The choice is stored under `@uskyu/dsh-usage-stats:range:v1`
+  (`day` / `week` / `month`; values saved as `week` or `month` by earlier builds
+  are still accepted). An unknown value, disabled storage or a write failure
+  falls back to `week`.
+- The month navigation (`‹` / `›` and `回到今天`) appears **only in the calendar
+  view**: the rolling range is independent of the calendar month, and month
+  arrows next to a rolling chart wrongly suggest the trend range can be paged.
 
 ### Model usage donut replaces the model list
 
 - The former "recent session costs" block and the intermediate "Today by model"
-  list are both gone. In their place, "Model usage" / "模型用量" shows a donut
-  for the **same rolling window as the trend**: the ring centre is the window
-  total (abbreviated) and the list beside it renders one row per model — colour
-  dot, model name, percentage and token count — for up to five models, with the
-  tail merged into "其他模型（N）" / "Other models (N)".
+  list are both gone. In their place, "Model usage" shows a donut for the
+  selected range, and its heading changes with the range: "今日模型用量",
+  "近 7 天模型用量" or "近 30 天模型用量". The ring centre is the range total
+  (abbreviated) and the list beside it renders one row per model — colour dot,
+  model name, percentage and token count — for up to five models, with the tail
+  merged into "其他模型（N）" / "Other models (N)".
 - Hovering a slice thickens it, shows a compact card over the ring centre
   (model name, tokens, share) and highlights the matching list row; hovering a
   list row highlights the matching slice and shows the same card. The card
@@ -87,7 +93,9 @@ donut over the same window.
 
 - The default view is now "Daily token trend" / "每日 Token 趋势图": one smooth
   Catmull-Rom line per model across the rolling window, with a colour-dot legend
-  above, four dashed gridlines behind, and up to six date ticks below.
+  above, four dashed gridlines behind, and up to six date ticks below. The trend
+  window follows the range but never goes below 7 days, so "每天" still shows a
+  7-day curve instead of a single point.
 - The spline tension was raised from 0.5 to 1.0, so the trough between two peaks
   reads as a rounded U-shape instead of a sharp V.
 - The x axis now ends on **today** (the window's last sample) instead of running
@@ -106,8 +114,8 @@ donut over the same window.
   `@uskyu/dsh-usage-stats:view:v1`; an unknown stored value, disabled storage or
   a write failure falls back to the curve.
 - The standalone "recent 14 days" list was removed; the trend chart and the
-  donut cover the same rolling window, while the calendar view keeps its own
-  month.
+  donut share the selected range (with the trend's 7-day floor), while the
+  calendar view keeps its own month.
 
 ## Compatibility
 

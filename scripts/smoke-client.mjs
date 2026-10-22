@@ -413,6 +413,10 @@ assert.equal(weekKeys[6], "2026-08-04", "the window always ends today");
 assert.equal(weekKeys[0], "2026-07-29", "and starts six days earlier, crossing the month boundary correctly");
 assert.equal(recentDayKeys(30, fixedNow).at(-1), "2026-08-04", "the month window also ends today");
 assert.equal(recentDayKeys(30, fixedNow).length, 30);
+// A one-day window is a single sample: today only. This is what the ring uses
+// for 每天, and why the trend cannot.
+const dayKeys = recentDayKeys(1, fixedNow);
+assert.deepEqual(dayKeys, ["2026-08-04"], "a one-day window is today, and nothing else");
 assert.equal(axisLabelOf("2026-08-04"), "8/4", "axis labels are compact M/D");
 assert.equal(axisLabelOf("2026-01-09"), "1/9", "and drop the leading zero");
 
@@ -648,9 +652,12 @@ assert.deepEqual(statValues.map((node) => node.props.title), ["33,818,571", "33,
 // The header row carries a range switch and a view switch, in that order, so
 // neither costs a row of its own. The month arrows only page the calendar, so
 // they are absent in the trend view. The trend is the default.
+// The range switch has three options, and "每天" is ring-only: a one-day window
+// cannot show a trend, so the trend keeps its seven-day floor.
 const rangeButtons = renderer.root.findAll((node) => typeof node.props?.["data-range"] === "string");
-assert.deepEqual(rangeButtons.map((node) => node.props["data-range"]), ["week", "month"], "the range switch offers a week first, then a month");
-assert.equal(rangeButtons[0].props["aria-pressed"], true, "the 7-day window is the default");
+assert.deepEqual(rangeButtons.map((node) => node.props["data-range"]), ["day", "week", "month"], "the range switch offers 每天, 近 7 天, then 近 30 天");
+assert.equal(rangeButtons[1].props["aria-pressed"], true, "近 7 天 is the default");
+assert.equal(rangeButtons[0].props.title, "usage.rangeHint.day", "每天 must explain in its tooltip that it sizes the ring only");
 const viewButtons = renderer.root.findAll((node) => typeof node.props?.["data-view"] === "string");
 assert.deepEqual(viewButtons.map((node) => node.props["data-view"]), ["curve", "heat"], "the view switch offers the curve first, then the calendar");
 assert.equal(viewButtons[0].props["aria-pressed"], true, "the trend is the default view");
@@ -752,17 +759,34 @@ assert.equal(renderer.root.findAll((node) => node.props?.["data-model-rank"]).le
 // The retired 14-day list must not come back.
 assert.equal(renderer.root.findAll((node) => node.props?.className === "usg_day").length, 0, "the 14-day list is gone");
 
-// Switching the range re-windows both charts; the month arrows appear with the
-// calendar view only.
+// Switching the range re-windows both charts. 每天 re-windows only the ring; the
+// month arrows appear with the calendar view only.
+const dayButton = rangeButtons[0];
+const weekButton = rangeButtons[1];
+const monthButton = rangeButtons[2];
 await act(async () => {
-	rangeButtons[1].props.onClick();
+	monthButton.props.onClick();
 	await flushPanelEffects();
 });
-assert.equal(renderer.root.findAll((node) => node.props?.["data-trend-day"]).length, 30, "the month range renders a 30-day window");
+assert.equal(renderer.root.findAll((node) => node.props?.["data-trend-day"]).length, 30, "近 30 天 renders a 30-day trend");
 assert.equal(renderer.root.findAll((node) => node.props?.["data-trend-day"]).at(-1).props["data-trend-day"], todayKeyOf(), "and it still ends today");
 assert.equal(readStoredRange(localStorage), "month", "the range choice must persist");
 await act(async () => {
-	rangeButtons[0].props.onClick();
+	dayButton.props.onClick();
+	await flushPanelEffects();
+});
+assert.equal(renderer.root.findAll((node) => node.props?.["data-trend-day"]).length, 7, "每天 must NOT shrink the trend to one sample");
+assert.equal(renderer.root.findAll((node) => node.props?.["data-trend-day"]).at(-1).props["data-trend-day"], todayKeyOf(), "the trend still ends today");
+// The ring is the only thing that narrows, and the section title says so.
+assert.equal(renderer.root.findAll((node) => node.props?.["data-donut-item"]).length, 2, "the ring still lists today's models");
+assert.equal(
+	renderer.root.findAll((node) => node.props?.className === "usg_sectionTitle").map((node) => node.props.children).includes("usage.modelShare.day"),
+	true,
+	"the ring title must name the 每天 window so the narrower ring is not a mystery"
+);
+assert.equal(readStoredRange(localStorage), "day", "the 每天 choice must persist");
+await act(async () => {
+	weekButton.props.onClick();
 	await flushPanelEffects();
 });
 assert.equal(renderer.root.findAll((node) => node.props?.["data-trend-day"]).length, 7, "switching back restores the 7-day window");
